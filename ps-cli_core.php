@@ -34,4 +34,11 @@ function core_list_changed_files() {
 	return;
 }
 
+function core_upgrade() {
+	# TODO: get path
+	
+	# deprecated ?
+	require_once('../install/upgrade/upgrade.php');
+}
+
 ?>

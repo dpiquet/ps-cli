@@ -12,6 +12,10 @@
 #	  - is installed
 #         - list shops
 #         - upgrade database (files already updated)
+#	  - clear smarty cache
+#	  - enable/disable cache
+#	  - controles CCC
+#	  - enable/disable maintenance mode
 #
 #
 #	TEMPLATES
@@ -21,6 +25,10 @@
 #	  - Add user
 #	  - delete user
 #	  - list users
+#
+#	INTERNALS
+#	  - oop
+#	  - cli arguments
 #	
 #
 
@@ -52,8 +60,8 @@ if (! file_exists(_PS_ADMIN_DIR_.'/../config/settings.inc.php') ) {
 	die();
 }
 
-require(_PS_ADMIN_DIR_.'/../config/config.inc.php');
-require(_PS_ADMIN_DIR_.'/functions.php');
+require_once(_PS_ADMIN_DIR_.'/../config/config.inc.php');
+require_once(_PS_ADMIN_DIR_.'/functions.php');
 
 
 /*====================================
@@ -64,12 +72,13 @@ require(_PS_ADMIN_DIR_.'/functions.php');
 
 require_once('ps-cli_modules.php');
 require_once('ps-cli_core.php');
+require_once('ps-cli_db.php');
 
 
 print_module_list('all');
-//enable_module('statscheckup');
-//disable_module('statscheckup');
+//enable_module('gamification');
+//disable_module('gamification');
 //core_list_changed_files(); 
 //core_check_version();
-
+//database_create_backup();
 ?>

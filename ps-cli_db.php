@@ -7,10 +7,14 @@
 
 function database_create_backup() {
 
-	//configuration get and set for drop etc... before backup
-	
-	$backupCore = new PrestaShopBackupCore();
+	$backupCore = new PrestaShopBackup();
 
-	
+	$backupCore->psBackupAll = true;
+	$backupCore->psBackupDropTable = true;
+
+	$backupCore->add();
+
+	return $backupCore->id;
 }
+
 ?>

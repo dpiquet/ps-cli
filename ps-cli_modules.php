@@ -6,21 +6,114 @@
 #	  - disable_module
 #	  - enable_module
 #	  - print_module_list
-#	TODO
 #	  - Install modules
 #	  - Uninstall modules
+#	  - reset module
+#
+#	TODO
 #	  - Update modules
-#	  - Reinit modules
 #	  - deactivation on tablet / mobile / computers
 #	  - upgrade database (files already updated)
 #	  - autoupgrade all
 #	  - module details
 #	  - module list formats (export csv)
+#	  
+#	  - improve error messages / handling
 
 
 function delete_module() {
 	/**postProcessDelete() **/
 	return true;
+}
+
+function reset_module($moduleName) {
+
+	if ( $module = Module::getInstanceByName($moduleName) ) {
+		if ( Validate::isLoadedObject($module) ) {
+			if ( method_exists($module, 'reset') ) {
+				if ( $module->reset() ) {
+					echo "Module $moduleName successfully reset";
+					return true;
+				}
+				else {
+					echo "Cannot reset this module";
+					return false;
+				}
+			}
+			else {
+				if ( $module->uninstall() ) {
+					if ( $module->install() ) {
+						echo "Module $moduleName successfully reset (uninstalled and reinstalled\n";
+						return true;
+					}
+					else {
+						echo "Could not reinstall module $moduleName\n";
+						return false;
+					}
+				}
+				else {
+					echo "Could not uninstall module $moduleName\n";
+					return false;
+				}		
+			}
+		}
+		else {
+			echo "Could not load $moduleName object";
+			return false;
+		}
+	}
+	else {
+		echo "Unknown module $moduleName\n";
+		return false;
+	}
+}
+
+function uninstall_module($moduleName) {
+	
+	if ( $module = Module::getInstanceByName($moduleName) ) {
+		if ( ! Module::isInstalled($moduleName) ) {
+			echo "module $moduleName is already uninstalled\n";
+			return true;
+		}
+
+		$res = $module->uninstall();
+		if ( $res ) {
+			echo "module $moduleName successfully uninstalled !";
+			return true;
+		}
+		else {
+			echo "error, could not uninstall $moduleName\n";
+			return false;
+		}
+	}
+	else {
+		echo "Unknown module $moduleName\n";
+		return false;
+	}
+}
+
+function install_module($moduleName) {
+
+	if ( $module = Module::getInstanceByName($moduleName) ) {
+		if ( Module::isInstalled($moduleName) ) {
+			echo "module $moduleName is already installed\n";
+			return true;
+		}
+
+		$res = $module->install();
+		if ( $res ) {
+			echo "module $moduleName successfully installed";
+			return true;
+		}
+		else {
+			echo "error, could not install module $moduleName";
+			return false;
+		}
+	}
+	else {
+		echo "Unknown module $moduleName\n";
+		return false;
+	}
 }
 
 /*
@@ -61,6 +154,12 @@ function enable_module($moduleName) {
 	$_GET['tab'] = 'AdminModules';
 
 	if ( $module = Module::getInstanceByName($moduleName) ) {
+
+		if ( ! Module::isInstalled( $moduleName ) ) {
+			echo "Module $moduleName is not installed !\n";
+			return false;
+		}
+
 		if (! $module->active ) {
 			$res = $module->enable();
 			if ( $res ) {
@@ -141,6 +240,16 @@ function print_module_list($status = 'all') {
 			foreach( $modulesOnDisk as $module ) {
 				$module->installed ? $iStat = 'Yes' : $iStat = 'No';
 				$module->active ? $aStat = 'Yes' : $aStat = 'No';
+
+				// check for updates
+				if ( Module::needUpgrade($module) ) {
+					echo 'need upgrade';
+				}
+				else {
+					echo 'up2date';
+				}
+					
+					
 
 
 				printf($mask, "$module->id" ,
