@@ -32,11 +32,11 @@ function reset_module($moduleName) {
 		if ( Validate::isLoadedObject($module) ) {
 			if ( method_exists($module, 'reset') ) {
 				if ( $module->reset() ) {
-					echo "Module $moduleName successfully reset";
+					echo "Module $moduleName successfully reset\n";
 					return true;
 				}
 				else {
-					echo "Cannot reset this module";
+					echo "Cannot reset this module\n";
 					return false;
 				}
 			}
@@ -58,7 +58,7 @@ function reset_module($moduleName) {
 			}
 		}
 		else {
-			echo "Could not load $moduleName object";
+			echo "Could not load $moduleName object\n";
 			return false;
 		}
 	}
@@ -78,7 +78,7 @@ function uninstall_module($moduleName) {
 
 		$res = $module->uninstall();
 		if ( $res ) {
-			echo "module $moduleName successfully uninstalled !";
+			echo "module $moduleName successfully uninstalled !\n";
 			return true;
 		}
 		else {
@@ -102,11 +102,11 @@ function install_module($moduleName) {
 
 		$res = $module->install();
 		if ( $res ) {
-			echo "module $moduleName successfully installed";
+			echo "module $moduleName successfully installed\n";
 			return true;
 		}
 		else {
-			echo "error, could not install module $moduleName";
+			echo "error, could not install module $moduleName\n";
 			return false;
 		}
 	}
@@ -248,9 +248,6 @@ function print_module_list($status = 'all') {
 				else {
 					echo 'up2date';
 				}
-					
-					
-
 
 				printf($mask, "$module->id" ,
 				     "$module->name" ,

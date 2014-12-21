@@ -73,12 +73,28 @@ require_once(_PS_ADMIN_DIR_.'/functions.php');
 require_once('ps-cli_modules.php');
 require_once('ps-cli_core.php');
 require_once('ps-cli_db.php');
+require_once('ps-cli_utils.php');
+require_once('ps-cli_employee.php');
 
+// init context, etc...
+ps_cli_initialize();
 
-print_module_list('all');
+//print_module_list('all');
 //enable_module('gamification');
 //disable_module('gamification');
 //core_list_changed_files(); 
 //core_check_version();
 //database_create_backup();
+//uninstall_module('gamification');
+//install_module('gamification');
+//list_employees();
+
+
+list_employees();
+echo "\n";
+
+//add_employee( 'redxiii@canyoncosmo.jp', '123456789', 1, 'RED', 'XIII' );
+
+list_employees();
+
 ?>
