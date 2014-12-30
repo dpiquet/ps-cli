@@ -190,5 +190,36 @@ function add_employee( $email, $password, $profile, $firstName, $lastName, $acti
 	}
 }
 
+function change_employee_password($employeeEmail, $newPassword) {
+
+	if ( !Validate::isEmail($employeeEmail) ) {
+		echo "$email is not a valid email address\n";
+		return false;
+	}
+
+	if (! Validate::isPasswd($newPassword, 1) ) {
+		echo "Provided password is not a valid password for user $employeeEmail\n";
+		return false;
+	}
+
+	$employee = new Employee();
+	if (! $employee->getByEmail($employeeEmail) ) {
+		echo "Could not find user with email $employeeEmail\n";
+		return false;
+	}
+
+	$employee->passwd = md5(_COOKIE_KEY_ . $newPassword);
+
+	$res = $employee->update();
+
+	if ( $res ) {
+		echo "Successfully updated password for user $employeeEmail\n";
+		return true;
+	}
+	else {
+		echo "Could not change password for user $employeeEmail\n";
+		return false;
+	}
+}
 
 ?>

@@ -285,3 +285,60 @@ function print_module_list($status = 'all') {
 	}
 }
 
+function disable_non_native_modules() {
+	$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
+
+	if ($currentStatus == 0) {
+		Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 1);
+		echo "Non native modules successfully disabled\n";
+		return true;
+	}
+	else {
+		echo "Non native modules already disabled\n";
+		return true;
+	}
+}
+
+function enable_non_native_modules() {
+	$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
+
+	if ($currentStatus == 1) {
+		Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 0);
+		echo "Non native modules successfully enabled\n";
+		return true;
+	}
+	else {
+		echo "Non native modules already enabled\n";
+		return true;
+	}
+}
+
+function disable_overrides() {
+	$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
+
+	if ($currentStatus == 0) {
+		Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 1);
+		echo "Overrides successfully disabled\n";
+		return true;
+	}
+	else {
+		echo "Overrides already disabled\n";
+		return true;
+	}
+}
+
+function enable_overrides() {
+	$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
+
+	if ($currentStatus == 1) {
+		Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 0);
+		echo "Overrides successfully enabled\n";
+		return true;
+	}
+	else {
+		echo "Overrides already enabled\n";
+		return true;
+	}
+}
+
+?>

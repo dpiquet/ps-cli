@@ -9,12 +9,9 @@
 # TODO
 #	CORE
 #	  - Check updates
-#	  - is installed
 #         - list shops
 #         - upgrade database (files already updated)
-#	  - enable/disable cache
 #	  - controles CCC
-#	  - enable/disable maintenance mode
 #
 #
 #	TEMPLATES
@@ -65,7 +62,7 @@ require_once(_PS_ADMIN_DIR_.'/functions.php');
 \=====================================*/
 
 require_once('ps-cli_modules.php');
-require_once('ps-cli_themes.php');
+//require_once('ps-cli_themes.php');
 require_once('ps-cli_core.php');
 require_once('ps-cli_db.php');
 require_once('ps-cli_utils.php');
@@ -89,9 +86,24 @@ ps_cli_initialize();
 //echo "\n";
 
 //add_employee( 'tifa@seventhsky.jp', '123456789', 1, 'Tifa', 'Strife' );
+//change_employee_password('dpiquet@doyousoft.com', '123456789');
 
 //list_employees();
 
-print_theme_list();
+//print_theme_list();
+
+//disable_shop();
+//enable_shop();
+
+//disable_automatic_module_update_checks();
+//enable_automatic_module_update_checks();
+
+//disable_non_native_modules();
+
+print_cache_status();
+
+//enable_cache('CacheFs');
+disable_cache();
+print_cache_status();
 
 ?>
