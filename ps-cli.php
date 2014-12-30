@@ -12,7 +12,6 @@
 #	  - is installed
 #         - list shops
 #         - upgrade database (files already updated)
-#	  - clear smarty cache
 #	  - enable/disable cache
 #	  - controles CCC
 #	  - enable/disable maintenance mode
@@ -20,11 +19,6 @@
 #
 #	TEMPLATES
 #	  - list templates
-#
-#	USERS
-#	  - Add user
-#	  - delete user
-#	  - list users
 #
 #	INTERNALS
 #	  - oop
@@ -71,6 +65,7 @@ require_once(_PS_ADMIN_DIR_.'/functions.php');
 \=====================================*/
 
 require_once('ps-cli_modules.php');
+require_once('ps-cli_themes.php');
 require_once('ps-cli_core.php');
 require_once('ps-cli_db.php');
 require_once('ps-cli_utils.php');
@@ -88,13 +83,15 @@ ps_cli_initialize();
 //uninstall_module('gamification');
 //install_module('gamification');
 //list_employees();
+//delete_employee('cloud.strife@shinra.jp');
 
+//list_employees();
+//echo "\n";
 
-list_employees();
-echo "\n";
+//add_employee( 'tifa@seventhsky.jp', '123456789', 1, 'Tifa', 'Strife' );
 
-//add_employee( 'redxiii@canyoncosmo.jp', '123456789', 1, 'RED', 'XIII' );
+//list_employees();
 
-list_employees();
+print_theme_list();
 
 ?>

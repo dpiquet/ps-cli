@@ -41,4 +41,8 @@ function core_upgrade() {
 	require_once('../install/upgrade/upgrade.php');
 }
 
+function clear_smarty_cache() {
+	return Tools::clearSmartyCache();
+}
+
 ?>

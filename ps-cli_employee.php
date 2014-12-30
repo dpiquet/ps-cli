@@ -43,8 +43,8 @@ function delete_employee( $employeeEmail, $force = false ) {
 		return false;
 	}
 
-	$employee = Employee::getByEmail($employeeEmail);
-	if (! $employee ) {
+	$employee = new Employee();
+	if (! $employee->getByEmail($employeeEmail) ) {
 		echo "No account found with email $employeeEmail\n";
 		return false;
 	}
@@ -72,8 +72,8 @@ function disable_employee($employeeEmail) {
 		return false;
 	}
 
-	$employee = Employee::getByEmail($employeeEmail);
-	if( !$employee ) {
+	$employee = new Employee();
+	if (! $employee->getByEmail($employeeEmail) ) {
 		echo "Could not find user with email $employeeEmail\n";
 		return false;
 	}
@@ -102,8 +102,8 @@ function enable_employee($employeeEmail) {
 		return false;
 	}
 
-	$employee = Employee::getByEmail($employeeEmail);
-	if( !$employee ) {
+	$employee = new Employee();
+	if (! $employee->getByEmail($employeeEmail) ) {
 		echo "Could not find user with email $employeeEmail\n";
 		return false;
 	}
@@ -130,7 +130,7 @@ function enable_employee($employeeEmail) {
 function add_employee( $email, $password, $profile, $firstName, $lastName, $active=true, $optin=false, $defaultTab=1, $boTheme='default', $boMenu=1 ) {
 
 	if ( Employee::employeeExists($email) ) {
-		echo "Cannot add $email, this address is already in use !\n";
+		echo "Cannot add $email, this email address is already registered !\n";
 		return false;
 	}
 
@@ -178,8 +178,6 @@ function add_employee( $email, $password, $profile, $firstName, $lastName, $acti
 	$employee->id_profile = $profile;
 	$employee->id_lang = Configuration::get('PS_LANG_DEFAULT');
 	$employee->bo_menu = $boMenu;
-
-	print_r($employee);
 
 	$res = $employee->add(true, true);
 	if ( $res ) {
