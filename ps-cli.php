@@ -100,10 +100,16 @@ ps_cli_initialize();
 
 //disable_non_native_modules();
 
-print_cache_status();
+//print_cache_status();
 
 //enable_cache('CacheFs');
-disable_cache();
-print_cache_status();
+//disable_cache();
+//print_cache_status();
+
+//list_employees();
+
+//print_module_list()
+
+upgrade_all_modules();
 
 ?>

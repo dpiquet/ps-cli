@@ -186,8 +186,9 @@ function print_module_list($status = 'all') {
 	$_GET['controller'] = 'AdminModules';
 	$_GET['tab'] = 'AdminModules';
 
-	$controller = new AdminModulesControllerCore;
-	$controller->ajaxProcessRefreshModuleList(true);
+	//throws fatal error
+//	$controller = new AdminModulesControllerCore;
+//	$controller->ajaxProcessRefreshModuleList(true);
 
 	$modulesOnDisk = Module::getModulesOnDisk();
 	/**
@@ -232,9 +233,9 @@ function print_module_list($status = 'all') {
 	switch($status) {
 
 		case 'all':
-			$mask = "| %3.3s | %32.32s | %12.12s | %12.12s |";
+			$mask = "| %3.3s | %32.32s | %12.12s | %12.12s | %12.12s |";
 
-			printf($mask, 'ID', 'Name', 'Installed', 'Active');
+			printf($mask, 'ID', 'Name', 'Installed', 'Active', 'Upgradable');
 			echo "\n";
 
 			foreach( $modulesOnDisk as $module ) {
@@ -242,17 +243,27 @@ function print_module_list($status = 'all') {
 				$module->active ? $aStat = 'Yes' : $aStat = 'No';
 
 				// check for updates
-				if ( Module::needUpgrade($module) ) {
+/*
+				if ( isset($module->version_addons) && $module->version_addons ) {
 					echo 'need upgrade';
 				}
 				else {
 					echo 'up2date';
 				}
+*/
+				if (isset($module->version_addons) && $module->version_addons) {
+					$uStat = 'Yes';
+				}
+				else {
+					$uStat = 'No';
+				}
+
 
 				printf($mask, "$module->id" ,
 				     "$module->name" ,
 				     " $iStat" ,
-				     " $aStat");
+				     " $aStat",
+				     " $uStat");
 				echo "\n";
 			}
 			break;
@@ -339,6 +350,67 @@ function enable_overrides() {
 		echo "Overrides already enabled\n";
 		return true;
 	}
+}
+
+// Todo: rewrite to loop over xml modules; check if installed and upgradable; fire upgrade
+
+function upgrade_all_modules() {	
+//	$xmlModuleListContent = Tools::addonsRequest('customer');
+	$raw = Tools::file_get_contents('api.prestashop.com/xml/modules_list_16.xml');
+	$xmlModuleList = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
+
+	$modulesOnDisk = Module::getModulesOnDisk();
+
+	foreach($xmlModuleList->module as $km) {
+
+		if(! $module = Module::getInstanceByName($km->name)) {
+			echo "Could not load module $km->name\n";
+			continue;
+		}
+		echo $module->name;
+
+		if ( $module->installed == 1 ) {
+			if (isset($module->version_addons) && $module->version_addons) {
+				echo "Downloading $module->name archive\n";
+				_download_module_archive($module);
+				die('ok'); // debug
+			}
+		}
+		else {
+			continue;
+		}
+
+		if ( Module::initUpgradeModule($module) ) {
+			echo $module->name . " could be upgraded\n";
+
+			$module->runUpgradeModule();
+		}
+	}
+}
+
+function upgrade_module($moduleName) {
+	if ( $module = Module::getInstanceByName($moduleName) ) {
+		// run upgrade process 
+	}
+	else {
+		echo "Unknown module $moduleName\n";
+		return false;
+	}
+
+}
+
+//todo manage loggedOnAddons
+function _download_module_archive($module) {
+
+	$ret = Tools::addonsRequest('module', Array('id_module' => pSQL($module->id)));
+
+	print_r($ret);
+	die('ok');
+	
+	file_put_contents(
+		_PS_MODULE_DIR_.$module->name.'.zip',
+		Tools::addonsRequest('module', Array('id_module' => pSQL($module->id)))
+	);
 }
 
 ?>

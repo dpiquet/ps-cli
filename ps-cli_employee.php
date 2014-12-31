@@ -10,10 +10,14 @@
 #	  - disable_employee
 #
 
-function list_employees() {
+function list_employees($lang = NULL) {
 
-	// TODO: load language instead of assuming language 1 exists (config ?)
-	$profiles = Profile::getProfiles(1);
+	// TODO: check if lang exists before using it
+	if ( $lang === NULL ) {
+		$lang = Configuration::get('PS_LANG_DEFAULT');
+	}
+
+	$profiles = Profile::getProfiles($lang);
 	$fieldSeparator = ' ';
 	$lineSeparator = "\n";
 
