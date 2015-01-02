@@ -359,24 +359,63 @@ function upgrade_all_modules() {
 	// addonsMustHave
 	// addonsNative
 	// addonsBought ? 
+	
+	// todo support for loggedOnAddons
+	$loggedOnAddons = false;
 
-	// todo: reload cache before using it
+	// Reload caches
+	file_put_contents(
+		_PS_ROOT_DIR_.Module::CACHE_FILE_DEFAULT_COUNTRY_MODULES_LIST, 
+		Tools::addonsRequest('native')
+	);
+
+	file_put_contents(
+		_PS_ROOT_DIR_.Module::CACHE_FILE_MUST_HAVE_MODULES_LIST,
+		Tools::addonsRequest('must-have')
+	);
+
+	if ($loggedOnAddons) {
+		file_put_contents(
+			_PS_ROOT_DIR_.Module::CACHE_FILE_CUSTOMER_MODULES_LIST,
+			Tools::addonsRequest('customer')
+		);
+	}
+
+	$xmlModuleLists = Array();
+
 	$raw = Tools::file_get_contents(_PS_ROOT_DIR_.Module::CACHE_FILE_DEFAULT_COUNTRY_MODULES_LIST);
-	$xmlModuleList = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
+	$xmlModuleLists[] = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
+	
+	$raw = Tools::file_get_contents(_PS_ROOT_DIR_.Module::CACHE_FILE_MUST_HAVE_MODULES_LIST);
+	$xmlModuleLists[] = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
 
-	$modulesOnDisk = Module::getModulesOnDisk();
+	$moduleStore = Array();
+
+	foreach($xmlModuleLists as $xmlModuleList) {
+		foreach ($xmlModuleList->module as $km) {
+			$moduleStore[] = $km;
+		}
+	}
+
+	$modulesOnDisk = Module::getModulesOnDisk(true);
 
 	$upgradeErrors = Array();
 
 	foreach($modulesOnDisk as $module) {
 
-	    if(! (isset($module->version_addons) && $module->version_addons)) {
-		continue;
-	    }
+//	    if(! (isset($module->version_addons) && $module->version_addons)) {
+//		continue;
+//	    }
 
-	    foreach($xmlModuleList->module as $km) {
+	    foreach($moduleStore as $km) {
 
 		if ( $km->name != $module->name ) {
+			continue;
+		}
+
+		if (version_compare($module->version, $km->version, '<') == 0) {
+
+			echo "$module->name: $module->version is equal to $km->version\n";
 			continue;
 		}
 
@@ -404,15 +443,44 @@ function upgrade_all_modules() {
 	//reload modules from disk and perform upgrades
 	$modules = Module::getModulesOnDisk();
 	foreach ($modules as $module) {
+
 		if( Module::initUpgradeModule($module) ) {
-			$module->runUpgradeModule();
+
+			if (!class_exists($module->name)) {
+				if(!file_exists(_PS_MODULE_DIR_.$module->name.'/'.$module->name.'.php')) {
+					echo "Could not find $module->name.php file\n";
+					continue;
+				}
+
+				require_once(_PS_MODULE_DIR_.$module->name.'/'.$module->name.'.php');
+			}
+
+			if ( $object = new $module->name() ) {
+
+				$object->runUpgradeModule();
+				if ((count($errors_module_list = $object->getErrors()))) {
+                                	$upgradeErrors[] = 'name: '. $module->displayName .
+							'message: '. $errors_module_list;
+				}
+
+				unset($object);
+			}
+			else {
+				echo "error, could not create object from $module->name\n";
+			}
 		}
+
+		Language::updateModulesTranslations(array($module->name));
 	}
 
 	if (empty($upgradeErrors)) {
 		return true;
 	}
 	else {
+		foreach($upgradeErrors as $error) {
+			echo $error['name'].': '.$error['message']."\n";
+		}
+
 		return false;
 	}
 }
