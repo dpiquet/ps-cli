@@ -352,65 +352,90 @@ function enable_overrides() {
 	}
 }
 
-// Todo: rewrite to loop over xml modules; check if installed and upgradable; fire upgrade
-
+// Todo: support for bought modules (prestashop login, etc...)
 function upgrade_all_modules() {	
-//	$xmlModuleListContent = Tools::addonsRequest('customer');
-	$raw = Tools::file_get_contents('api.prestashop.com/xml/modules_list_16.xml');
+
+	//types:
+	// addonsMustHave
+	// addonsNative
+	// addonsBought ? 
+
+	// todo: reload cache before using it
+	$raw = Tools::file_get_contents(_PS_ROOT_DIR_.Module::CACHE_FILE_DEFAULT_COUNTRY_MODULES_LIST);
 	$xmlModuleList = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
 
 	$modulesOnDisk = Module::getModulesOnDisk();
 
-	foreach($xmlModuleList->module as $km) {
+	$upgradeErrors = Array();
 
-		if(! $module = Module::getInstanceByName($km->name)) {
-			echo "Could not load module $km->name\n";
-			continue;
-		}
-		echo $module->name;
+	foreach($modulesOnDisk as $module) {
 
-		if ( $module->installed == 1 ) {
-			if (isset($module->version_addons) && $module->version_addons) {
-				echo "Downloading $module->name archive\n";
-				_download_module_archive($module);
-				die('ok'); // debug
-			}
-		}
-		else {
+	    if(! (isset($module->version_addons) && $module->version_addons)) {
+		continue;
+	    }
+
+	    foreach($xmlModuleList->module as $km) {
+
+		if ( $km->name != $module->name ) {
 			continue;
 		}
 
-		if ( Module::initUpgradeModule($module) ) {
-			echo $module->name . " could be upgraded\n";
+		echo "Downloading $module->name archive\n";
+		$moduleArchive = _download_module_archive($km);
+		if (! $moduleArchive ) {
+			echo "Could not download $module->name update\n";
+			$upgradeErrors[] = "$module->name could not be downloaded\n";
+			continue;
+		}
 
+		echo "Extracting $module->name archive\n";
+
+		if (! Tools::ZipExtract($moduleArchive, _PS_MODULE_DIR_)) {
+			echo "Could not extract $module->name archive\n";	
+			$upgradeErrors[] = "$module->name could not be extracted\n";
+			continue;
+		}
+		
+		// clean
+		unlink($moduleArchive);
+	    }
+	}
+
+	//reload modules from disk and perform upgrades
+	$modules = Module::getModulesOnDisk();
+	foreach ($modules as $module) {
+		if( Module::initUpgradeModule($module) ) {
 			$module->runUpgradeModule();
 		}
 	}
-}
 
-function upgrade_module($moduleName) {
-	if ( $module = Module::getInstanceByName($moduleName) ) {
-		// run upgrade process 
+	if (empty($upgradeErrors)) {
+		return true;
 	}
 	else {
-		echo "Unknown module $moduleName\n";
 		return false;
 	}
-
 }
 
 //todo manage loggedOnAddons
 function _download_module_archive($module) {
 
-	$ret = Tools::addonsRequest('module', Array('id_module' => pSQL($module->id)));
+	if (file_exists(_PS_MODULE_DIR_.$module->name.'.zip')) {
+		unlink(_PS_MODULE_DIR_.$module->name.'.zip');
+	}
 
-	print_r($ret);
-	die('ok');
-	
-	file_put_contents(
+	$ret = file_put_contents(
 		_PS_MODULE_DIR_.$module->name.'.zip',
 		Tools::addonsRequest('module', Array('id_module' => pSQL($module->id)))
 	);
+
+	if ($ret) {
+		return _PS_MODULE_DIR_.$module->name.'.zip';
+	}
+	else {
+		return false;
+	}
+
 }
 
 ?>
