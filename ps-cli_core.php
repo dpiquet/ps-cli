@@ -5,250 +5,253 @@
 # TODO: enable / disable API; generate API keys ?
 #
 
-function core_check_version() {
-	$upgrader = new UpgraderCore;
-	$latest = $upgrader->checkPSVersion(true);
+class PS_CLI_CORE {
 
-	if ($latest) {
-		foreach ( $latest as $newVersion ) {	
-			echo $newVersion['name'] . ' ' . $newVersion['version'];
+	function core_check_version() {
+		$upgrader = new UpgraderCore;
+		$latest = $upgrader->checkPSVersion(true);
+
+		if ($latest) {
+			foreach ( $latest as $newVersion ) {	
+				echo $newVersion['name'] . ' ' . $newVersion['version'];
+			}
+
 		}
-
-	}
-	else { echo 'Prestashop is up to date'; }
-}
-
-function core_list_changed_files() {
-	$upgrader = new UpgraderCore;
-	$files = $upgrader->getChangedFilesList();
-
-	if($files) {
-		foreach ( $files as $changedFileKey => $changedFileVal ) {
-			echo "$changedFileKey\n";
-			foreach ( $changedFileVal as $modifiedFiles ) {
-				echo "  $modifiedFiles\n";
-			}
-		}
-	}
-	
-	return;
-}
-
-function clear_smarty_cache() {
-	Tools::clearSmartyCache();
-	Tools::clearXMLCache();
-	Media::clearCache();
-	Tools::generateIndex();
-	return true;	
-}
-
-function disable_shop() {
-	$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
-
-	if ($currentStatus == 1) {
-		Configuration::updateValue('PS_SHOP_ENABLE', 0);
-
-		echo "Shop disabled\n";
-		return true;
-	}
-	else {
-		echo "Shop is already disabled\n";
-		return true;
+		else { echo 'Prestashop is up to date'; }
 	}
 
-}
+	function core_list_changed_files() {
+		$upgrader = new UpgraderCore;
+		$files = $upgrader->getChangedFilesList();
 
-function enable_shop() {
-	$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
-
-	if ($currentStatus == 0) {
-		Configuration::updateValue('PS_SHOP_ENABLE', 1);
-
-		echo "Shop enabled\n";
-		return true;
-	}
-	else {
-		echo "Shop is already enabled\n";
-		return true;
-	}
-}
-
-function disable_automatic_module_update_checks() {
-	$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
-
-	if ($currentStatus == 1) {
-		Configuration::updateValue('PRESTASTORE_LIVE', 0);
-		echo "Automatic module updates checks disabled\n";
-		return true;
-	}
-	else {
-		echo "Automatic module updates check already disabled\n";
-		return true;
-	}
-}
-
-function enable_automatic_module_update_checks() {
-	$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
-
-	if ($currentStatus == 0) {
-		Configuration::updateValue('PRESTASTORE_LIVE', 1);
-		echo "Automatic module updates checks enabled\n";
-		return true;
-	}
-	else {
-		echo "Automatic module updates check already enabled\n";
-		return true;
-	}
-}
-
-function print_cache_status() {
-
-	if ( _PS_CACHE_ENABLED_ ) {
-		echo "Cache "._PS_CACHING_SYSTEM_." is active\n";
-		return true;
-	}
-	else {
-		echo "Cache is disabled\n";
-		return true;
-	}
-}
-
-function disable_cache() {
-	// direct edition of the config file (as in the prestashop code)
-	$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
-
-	$new_settings = preg_replace('/define\(\'_PS_CACHE_ENABLED_\', \'([01]?)\'\);/Ui', 'define(\'_PS_CACHE_ENABLED_\', \'0\');', $new_settings);
-
-	if ( $new_settings == $prev_settings ) {
-		echo "Cache already disabled\n";
-		return true;
-	}
-
-	if (! copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php') ){
-		echo "Could not backup "._PS_ROOT_DIR_."/config/settings.inc.php before processing\n";
-		echo "Operation canceled\n";
-		return false;
-	}
-
-	if ( file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings) ) {
-		echo "Cache successfully disabled\n";
-
-		// clean cache
-		if (_PS_CACHING_SYSTEM_ == 'CacheFs') {
-			CacheFs::deleteCacheDirectory();
-		}
-
-		return true;
-	}
-	else {
-		echo "Could not update settings.inc.php file\n";
-		return false;
-	}
-}
-
-function enable_cache($cache, $cacheFSDepth = 1) {
-
-	if (! Validate::isInt($cacheFSDepth) ) {
-		echo "Error, cacheFSDepth must be integer\n";
-		return false;
-	}
-	
-	$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
-
-	$new_settings = preg_replace(
-		'/define\(\'_PS_CACHE_ENABLED_\', \'([01]?)\'\);/Ui', 
-		'define(\'_PS_CACHE_ENABLED_\', \'1\');', 
-		$new_settings
-	);
-
-	switch($cache) {
-		case 'CacheMemcache':
-			if (! extension_loaded('memcache') ) {
-				echo "PHP memcache PECL extension is not loaded\n";
-				return false;
-			}
-
-			break;
-
-		case 'CacheApc':
-			if (! extension_loaded('apc') ) {
-				echo "PHP APC PECL extension is not loaded\n";
-				return false;
-			}
-
-			break;
-
-		case 'CacheXcache':
-			if (! extension_loaded('xcache') ) {
-				echo "PHP Xcache extension not loaded\n";
-				return false;
-			}
-
-			break;
-
-		case 'CacheFs':
-			if (! is_dir(_PS_CACHEFS_DIRECTORY_) ) {
-				if (! @mkdir(_PS_CACHE_FS_DIR_, 0750, true) ) {
-					echo "Error, could not create cache directory\n";
-					return false;
+		if($files) {
+			foreach ( $files as $changedFileKey => $changedFileVal ) {
+				echo "$changedFileKey\n";
+				foreach ( $changedFileVal as $modifiedFiles ) {
+					echo "  $modifiedFiles\n";
 				}
 			}
-			elseif (! is_writeable(_PS_CACHEFS_DIRECTORY_) ) {
-				echo "Cache directory is not writeable\n";
-				return false;
+		}
+		
+		return;
+	}
+
+	function clear_smarty_cache() {
+		Tools::clearSmartyCache();
+		Tools::clearXMLCache();
+		Media::clearCache();
+		Tools::generateIndex();
+		return true;	
+	}
+
+	function disable_shop() {
+		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
+
+		if ($currentStatus == 1) {
+			Configuration::updateValue('PS_SHOP_ENABLE', 0);
+
+			echo "Shop disabled\n";
+			return true;
+		}
+		else {
+			echo "Shop is already disabled\n";
+			return true;
+		}
+
+	}
+
+	function enable_shop() {
+		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
+
+		if ($currentStatus == 0) {
+			Configuration::updateValue('PS_SHOP_ENABLE', 1);
+
+			echo "Shop enabled\n";
+			return true;
+		}
+		else {
+			echo "Shop is already enabled\n";
+			return true;
+		}
+	}
+
+	function disable_automatic_module_update_checks() {
+		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
+
+		if ($currentStatus == 1) {
+			Configuration::updateValue('PRESTASTORE_LIVE', 0);
+			echo "Automatic module updates checks disabled\n";
+			return true;
+		}
+		else {
+			echo "Automatic module updates check already disabled\n";
+			return true;
+		}
+	}
+
+	function enable_automatic_module_update_checks() {
+		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
+
+		if ($currentStatus == 0) {
+			Configuration::updateValue('PRESTASTORE_LIVE', 1);
+			echo "Automatic module updates checks enabled\n";
+			return true;
+		}
+		else {
+			echo "Automatic module updates check already enabled\n";
+			return true;
+		}
+	}
+
+	function print_cache_status() {
+
+		if ( _PS_CACHE_ENABLED_ ) {
+			echo "Cache "._PS_CACHING_SYSTEM_." is active\n";
+			return true;
+		}
+		else {
+			echo "Cache is disabled\n";
+			return true;
+		}
+	}
+
+	function disable_cache() {
+		// direct edition of the config file (as in the prestashop code)
+		$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
+
+		$new_settings = preg_replace('/define\(\'_PS_CACHE_ENABLED_\', \'([01]?)\'\);/Ui', 'define(\'_PS_CACHE_ENABLED_\', \'0\');', $new_settings);
+
+		if ( $new_settings == $prev_settings ) {
+			echo "Cache already disabled\n";
+			return true;
+		}
+
+		if (! copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php') ){
+			echo "Could not backup "._PS_ROOT_DIR_."/config/settings.inc.php before processing\n";
+			echo "Operation canceled\n";
+			return false;
+		}
+
+		if ( file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings) ) {
+			echo "Cache successfully disabled\n";
+
+			// clean cache
+			if (_PS_CACHING_SYSTEM_ == 'CacheFs') {
+				CacheFs::deleteCacheDirectory();
 			}
 
-			CacheFs::deleteCacheDirectory();
-			CacheFs::createCacheDirectories($cacheFSDepth);
-			Configuration::updateValue('PS_CACHEFS_DIRECTORY_DEPTH', $cacheFSDepth);
-
-			break;
-
-		default:
-			echo "Unknown cache type\n";
+			return true;
+		}
+		else {
+			echo "Could not update settings.inc.php file\n";
 			return false;
+		}
 	}
 
-	$new_settings = preg_replace(
-		'/define\(\'_PS_CACHING_SYSTEM_\', \'([a-z0-9=\/+-_]*)\'\);/Ui',
-		'define(\'_PS_CACHING_SYSTEM_\', \''.$cache.'\');',
-		$new_settings
-	);
+	function enable_cache($cache, $cacheFSDepth = 1) {
 
-	if ($new_settings == $prev_settings) {
-		echo "Cache $cache is already in use\n";
-		return true;
+		if (! Validate::isInt($cacheFSDepth) ) {
+			echo "Error, cacheFSDepth must be integer\n";
+			return false;
+		}
+		
+		$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
+
+		$new_settings = preg_replace(
+			'/define\(\'_PS_CACHE_ENABLED_\', \'([01]?)\'\);/Ui', 
+			'define(\'_PS_CACHE_ENABLED_\', \'1\');', 
+			$new_settings
+		);
+
+		switch($cache) {
+			case 'CacheMemcache':
+				if (! extension_loaded('memcache') ) {
+					echo "PHP memcache PECL extension is not loaded\n";
+					return false;
+				}
+
+				break;
+
+			case 'CacheApc':
+				if (! extension_loaded('apc') ) {
+					echo "PHP APC PECL extension is not loaded\n";
+					return false;
+				}
+
+				break;
+
+			case 'CacheXcache':
+				if (! extension_loaded('xcache') ) {
+					echo "PHP Xcache extension not loaded\n";
+					return false;
+				}
+
+				break;
+
+			case 'CacheFs':
+				if (! is_dir(_PS_CACHEFS_DIRECTORY_) ) {
+					if (! @mkdir(_PS_CACHE_FS_DIR_, 0750, true) ) {
+						echo "Error, could not create cache directory\n";
+						return false;
+					}
+				}
+				elseif (! is_writeable(_PS_CACHEFS_DIRECTORY_) ) {
+					echo "Cache directory is not writeable\n";
+					return false;
+				}
+
+				CacheFs::deleteCacheDirectory();
+				CacheFs::createCacheDirectories($cacheFSDepth);
+				Configuration::updateValue('PS_CACHEFS_DIRECTORY_DEPTH', $cacheFSDepth);
+
+				break;
+
+			default:
+				echo "Unknown cache type\n";
+				return false;
+		}
+
+		$new_settings = preg_replace(
+			'/define\(\'_PS_CACHING_SYSTEM_\', \'([a-z0-9=\/+-_]*)\'\);/Ui',
+			'define(\'_PS_CACHING_SYSTEM_\', \''.$cache.'\');',
+			$new_settings
+		);
+
+		if ($new_settings == $prev_settings) {
+			echo "Cache $cache is already in use\n";
+			return true;
+		}
+
+		if (! @copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php') ) {
+			echo "Error, could not backup config file\n";
+			return false;
+		}
+
+		if ( file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings) ) {
+			echo "cache $cache successfully activated\n";
+			return true;
+		}
+		else {
+			echo "Could not update config file\n";
+			return false;
+		}
+
 	}
 
-	if (! @copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php') ) {
-		echo "Error, could not backup config file\n";
-		return false;
-	}
+	// we should not load core before loading this
+	function upgrade_core() {
+		if (! @chdir('../install/upgrade/') ) {
+			echo "Could not find ../install/upgrade directory\n";
+			return false;
+		}
 
-	if ( file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings) ) {
-		echo "cache $cache successfully activated\n";
-		return true;
-	}
-	else {
-		echo "Could not update config file\n";
-		return false;
-	}
+		if (! @include_once('upgrade.php') ) {
+			echo "Error, could not find the upgrade.php script\n";
+			return false;
+		}
 
-}
-
-// we should not load core before loading this
-function upgrade_core() {
-	if (! @chdir('../install/upgrade/') ) {
-		echo "Could not find ../install/upgrade directory\n";
-		return false;
+		echo "End of upgrade process\n";
 	}
-
-	if (! @include_once('upgrade.php') ) {
-		echo "Error, could not find the upgrade.php script\n";
-		return false;
-	}
-
-	echo "End of upgrade process\n";
 }
 
 ?>

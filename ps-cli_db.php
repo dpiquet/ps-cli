@@ -5,16 +5,18 @@
 #  -backup
 #
 
-function database_create_backup() {
+class PS_CLI_DB {
 
-	$backupCore = new PrestaShopBackup();
+	function database_create_backup() {
 
-	$backupCore->psBackupAll = true;
-	$backupCore->psBackupDropTable = true;
+		$backupCore = new PrestaShopBackup();
 
-	$backupCore->add();
+		$backupCore->psBackupAll = true;
+		$backupCore->psBackupDropTable = true;
 
-	return $backupCore->id;
+		$backupCore->add();
+
+		return $backupCore->id;
+	}
 }
-
 ?>

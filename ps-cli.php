@@ -69,7 +69,7 @@ require_once('ps-cli_utils.php');
 require_once('ps-cli_employee.php');
 
 // init context, etc...
-ps_cli_initialize();
+PS_CLI_UTILS::ps_cli_initialize();
 
 //print_module_list('all');
 //enable_module('gamification');
@@ -110,6 +110,6 @@ ps_cli_initialize();
 
 //print_module_list()
 
-upgrade_all_modules();
+PS_CLI_MODULES::upgrade_all_modules();
 
 ?>
