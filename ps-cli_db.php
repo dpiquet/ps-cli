@@ -7,7 +7,7 @@
 
 class PS_CLI_DB {
 
-	function database_create_backup() {
+	public static function database_create_backup() {
 
 		$backupCore = new PrestaShopBackup();
 

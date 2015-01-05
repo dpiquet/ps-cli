@@ -24,7 +24,13 @@
 #
 
 /* Define some $_SERVERS var to avoid errors */
-$_SERVER['REQUEST_URI'] = '';
+$_SERVER['REQUEST_URI'] = 'admin.php?id_shop=2';
+
+$_GET['id_shop'] = '2';
+$_POST['id_shop'] = '2';
+
+$_GET['setShopContext'] = 's-2';
+$_POST['setShopContext'] = 's-2';
 
 
 /*=================================
@@ -67,6 +73,7 @@ require_once('ps-cli_core.php');
 require_once('ps-cli_db.php');
 require_once('ps-cli_utils.php');
 require_once('ps-cli_employee.php');
+require_once('ps-cli_shops.php');
 
 // init context, etc...
 PS_CLI_UTILS::ps_cli_initialize();
@@ -110,6 +117,14 @@ PS_CLI_UTILS::ps_cli_initialize();
 
 //print_module_list()
 
-PS_CLI_MODULES::upgrade_all_modules();
+//PS_CLI_MODULES::upgrade_all_modules();
+
+//PS_CLI_SHOPS::print_shop_list_tree();
+
+//PS_CLI_SHOPS::set_current_shop_context(2);
+
+//PS_CLI_MODULES::enable_module('gridhtml');
+
+PS_CLI_UTILS::parse_arguments();
 
 ?>

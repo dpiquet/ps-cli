@@ -12,7 +12,7 @@
 
 class PS_CLI_EMPLOYEE {
 
-	function list_employees($lang = NULL) {
+	public static function list_employees($lang = NULL) {
 
 		// TODO: check if lang exists before using it
 		if ( $lang === NULL ) {
@@ -42,7 +42,7 @@ class PS_CLI_EMPLOYEE {
 		}
 	}
 
-	function delete_employee( $employeeEmail, $force = false ) {
+	public static function delete_employee( $employeeEmail, $force = false ) {
 
 		if (! Validate::isEmail($employeeEmail) ) {
 			echo "$employeeEmail is not a valid email address !\n";
@@ -72,7 +72,7 @@ class PS_CLI_EMPLOYEE {
 		}
 	}
 
-	function disable_employee($employeeEmail) {
+	public static function disable_employee($employeeEmail) {
 		if ( !Validate::isEmail($employeeEmail) ) {
 			echo "$email is not a valid email address\n";
 			return false;
@@ -102,7 +102,7 @@ class PS_CLI_EMPLOYEE {
 		}
 	}
 
-	function enable_employee($employeeEmail) {
+	public static function enable_employee($employeeEmail) {
 		if ( !Validate::isEmail($employeeEmail) ) {
 			echo "$email is not a valid email address\n";
 			return false;
@@ -133,7 +133,7 @@ class PS_CLI_EMPLOYEE {
 
 	}
 
-	function add_employee( $email, $password, $profile, $firstName, $lastName, $active=true, $optin=false, $defaultTab=1, $boTheme='default', $boMenu=1 ) {
+	public static function add_employee( $email, $password, $profile, $firstName, $lastName, $active=true, $optin=false, $defaultTab=1, $boTheme='default', $boMenu=1 ) {
 
 		if ( Employee::employeeExists($email) ) {
 			echo "Cannot add $email, this email address is already registered !\n";
@@ -196,7 +196,7 @@ class PS_CLI_EMPLOYEE {
 		}
 	}
 
-	function change_employee_password($employeeEmail, $newPassword) {
+	public static function change_employee_password($employeeEmail, $newPassword) {
 
 		if ( !Validate::isEmail($employeeEmail) ) {
 			echo "$email is not a valid email address\n";

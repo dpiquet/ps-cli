@@ -28,7 +28,7 @@ class PS_CLI_MODULES {
 		return true;
 	}
 
-	function reset_module($moduleName) {
+	public static function reset_module($moduleName) {
 
 		if ( $module = Module::getInstanceByName($moduleName) ) {
 			if ( Validate::isLoadedObject($module) ) {
@@ -70,7 +70,7 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function uninstall_module($moduleName) {
+	public static function uninstall_module($moduleName) {
 		
 		if ( $module = Module::getInstanceByName($moduleName) ) {
 			if ( ! Module::isInstalled($moduleName) ) {
@@ -94,7 +94,7 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function install_module($moduleName) {
+	public static function install_module($moduleName) {
 
 		if ( $module = Module::getInstanceByName($moduleName) ) {
 			if ( Module::isInstalled($moduleName) ) {
@@ -124,7 +124,7 @@ class PS_CLI_MODULES {
 
 		return bool
 	*/
-	function disable_module($moduleName) {
+	public static function disable_module($moduleName) {
 		$_GET['controller'] = 'AdminModules';
 		$_GET['tab'] = 'AdminModules';
 
@@ -151,7 +151,7 @@ class PS_CLI_MODULES {
 
 		return bool
 	*/
-	function enable_module($moduleName) {	
+	public static function enable_module($moduleName) {	
 		$_GET['controller'] = 'AdminModules';
 		$_GET['tab'] = 'AdminModules';
 
@@ -162,7 +162,7 @@ class PS_CLI_MODULES {
 				return false;
 			}
 
-			if (! $module->active ) {
+			if (! Module::isEnabled($moduleName) ) {
 				$res = $module->enable();
 				if ( $res ) {
 					echo "Module $moduleName enabled\n";
@@ -184,13 +184,9 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function print_module_list($status = 'all') {
+	public static function print_module_list($status = 'all') {
 		$_GET['controller'] = 'AdminModules';
 		$_GET['tab'] = 'AdminModules';
-
-		//throws fatal error
-	//	$controller = new AdminModulesControllerCore;
-	//	$controller->ajaxProcessRefreshModuleList(true);
 
 		$modulesOnDisk = Module::getModulesOnDisk();
 		/**
@@ -290,7 +286,8 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function disable_non_native_modules() {
+	//TODO: tests
+	public static function disable_non_native_modules() {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
 
 		if ($currentStatus == 0) {
@@ -304,7 +301,8 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function enable_non_native_modules() {
+	// TODO: tests
+	public static function enable_non_native_modules() {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
 
 		if ($currentStatus == 1) {
@@ -318,7 +316,8 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function disable_overrides() {
+	//TODO: tests
+	public static function disable_overrides() {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
 
 		if ($currentStatus == 0) {
@@ -332,7 +331,8 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	function enable_overrides() {
+	// TODO: tests
+	public static function enable_overrides() {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
 
 		if ($currentStatus == 1) {
@@ -347,7 +347,7 @@ class PS_CLI_MODULES {
 	}
 
 	// Todo: support for bought modules (prestashop login, etc...)
-	function upgrade_all_modules() {	
+	public static function upgrade_all_modules() {	
 
 		//types:
 		// addonsMustHave
@@ -435,7 +435,7 @@ class PS_CLI_MODULES {
 	}
 
 	//todo manage loggedOnAddons
-	function _download_module_archive($module) {
+	private static function _download_module_archive($module) {
 
 		if (file_exists(_PS_MODULE_DIR_.$module->name.'.zip')) {
 			unlink(_PS_MODULE_DIR_.$module->name.'.zip');
@@ -455,7 +455,7 @@ class PS_CLI_MODULES {
 
 	}
 
-	function upgrade_all_modules_database() {
+	public static function upgrade_all_modules_database() {
 		//reload modules from disk and perform upgrades
 		$modules = Module::getModulesOnDisk();
 		foreach ($modules as $module) {

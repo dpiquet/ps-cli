@@ -1,13 +1,13 @@
 <?php
 #
-# Core functions
+# Core public static functions
 #
 # TODO: enable / disable API; generate API keys ?
 #
 
 class PS_CLI_CORE {
 
-	function core_check_version() {
+	public static function core_check_version() {
 		$upgrader = new UpgraderCore;
 		$latest = $upgrader->checkPSVersion(true);
 
@@ -20,7 +20,7 @@ class PS_CLI_CORE {
 		else { echo 'Prestashop is up to date'; }
 	}
 
-	function core_list_changed_files() {
+	public static function core_list_changed_files() {
 		$upgrader = new UpgraderCore;
 		$files = $upgrader->getChangedFilesList();
 
@@ -36,7 +36,7 @@ class PS_CLI_CORE {
 		return;
 	}
 
-	function clear_smarty_cache() {
+	public static function clear_smarty_cache() {
 		Tools::clearSmartyCache();
 		Tools::clearXMLCache();
 		Media::clearCache();
@@ -44,7 +44,7 @@ class PS_CLI_CORE {
 		return true;	
 	}
 
-	function disable_shop() {
+	public static function disable_shop() {
 		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
 
 		if ($currentStatus == 1) {
@@ -60,7 +60,7 @@ class PS_CLI_CORE {
 
 	}
 
-	function enable_shop() {
+	public static function enable_shop() {
 		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
 
 		if ($currentStatus == 0) {
@@ -75,7 +75,7 @@ class PS_CLI_CORE {
 		}
 	}
 
-	function disable_automatic_module_update_checks() {
+	public static function disable_automatic_module_update_checks() {
 		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
 
 		if ($currentStatus == 1) {
@@ -89,7 +89,7 @@ class PS_CLI_CORE {
 		}
 	}
 
-	function enable_automatic_module_update_checks() {
+	public static function enable_automatic_module_update_checks() {
 		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
 
 		if ($currentStatus == 0) {
@@ -103,7 +103,7 @@ class PS_CLI_CORE {
 		}
 	}
 
-	function print_cache_status() {
+	public static function print_cache_status() {
 
 		if ( _PS_CACHE_ENABLED_ ) {
 			echo "Cache "._PS_CACHING_SYSTEM_." is active\n";
@@ -115,7 +115,7 @@ class PS_CLI_CORE {
 		}
 	}
 
-	function disable_cache() {
+	public static function disable_cache() {
 		// direct edition of the config file (as in the prestashop code)
 		$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
 
@@ -148,7 +148,7 @@ class PS_CLI_CORE {
 		}
 	}
 
-	function enable_cache($cache, $cacheFSDepth = 1) {
+	public static function enable_cache($cache, $cacheFSDepth = 1) {
 
 		if (! Validate::isInt($cacheFSDepth) ) {
 			echo "Error, cacheFSDepth must be integer\n";
@@ -239,7 +239,7 @@ class PS_CLI_CORE {
 	}
 
 	// we should not load core before loading this
-	function upgrade_core() {
+	public static function upgrade_core() {
 		if (! @chdir('../install/upgrade/') ) {
 			echo "Could not find ../install/upgrade directory\n";
 			return false;
