@@ -107,11 +107,11 @@ class PS_CLI_CORE {
 
 		if ( _PS_CACHE_ENABLED_ ) {
 			echo "Cache "._PS_CACHING_SYSTEM_." is active\n";
-			return true;
+			return;
 		}
 		else {
 			echo "Cache is disabled\n";
-			return true;
+			return;
 		}
 	}
 
