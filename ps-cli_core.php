@@ -154,7 +154,12 @@ class PS_CLI_CORE {
 			echo "Error, cacheFSDepth must be integer\n";
 			return false;
 		}
-		
+
+		if ($depth <= 0) {
+			echo "Error, depth must be superior to 0\n";
+			return false;
+		}
+	
 		$new_settings = $prev_settings = file_get_contents(_PS_ROOT_DIR_.'/config/settings.inc.php');
 
 		$new_settings = preg_replace(
@@ -207,7 +212,7 @@ class PS_CLI_CORE {
 				break;
 
 			default:
-				echo "Unknown cache type\n";
+				echo "Unknown cache type: $cache\n";
 				return false;
 		}
 

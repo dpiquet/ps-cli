@@ -817,7 +817,7 @@ class Cli {
      *
      * @param array $schema A command line scheme returned from {@see Cli::getSchema()}.
      */
-    protected function writeHelp($schema) {
+    public function writeHelp($schema) {
         // Write the command description.
         $meta = Cli::val(Cli::META, $schema, []);
         $description = Cli::val('description', $meta);

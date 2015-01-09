@@ -284,6 +284,8 @@ class PS_CLI_MODULES {
 				return false;
 				break;
 		}
+
+		return true;
 	}
 
 	//TODO: tests
@@ -291,9 +293,14 @@ class PS_CLI_MODULES {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
 
 		if ($currentStatus == 0) {
-			Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 1);
-			echo "Non native modules successfully disabled\n";
-			return true;
+			if (Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 1)) {
+				echo "Non native modules successfully disabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not disable non native modules\n";
+				return false;
+			}
 		}
 		else {
 			echo "Non native modules already disabled\n";
@@ -306,9 +313,14 @@ class PS_CLI_MODULES {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
 
 		if ($currentStatus == 1) {
-			Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 0);
-			echo "Non native modules successfully enabled\n";
-			return true;
+			if (Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 0)) {
+				echo "Non native modules successfully enabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not enable non native modules\n";
+				return false;
+			}
 		}
 		else {
 			echo "Non native modules already enabled\n";
@@ -321,9 +333,14 @@ class PS_CLI_MODULES {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
 
 		if ($currentStatus == 0) {
-			Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 1);
-			echo "Overrides successfully disabled\n";
-			return true;
+			if (Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 1)) {
+				echo "Overrides successfully disabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not disable overrides\n";
+				return false;
+			}
 		}
 		else {
 			echo "Overrides already disabled\n";
@@ -336,9 +353,14 @@ class PS_CLI_MODULES {
 		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
 
 		if ($currentStatus == 1) {
-			Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 0);
-			echo "Overrides successfully enabled\n";
-			return true;
+			if (Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 0)) {
+				echo "Overrides successfully enabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not enable overrides\n";
+				return false;
+			}
 		}
 		else {
 			echo "Overrides already enabled\n";
