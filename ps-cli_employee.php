@@ -23,6 +23,16 @@ class PS_CLI_EMPLOYEE {
 		$fieldSeparator = ' ';
 		$lineSeparator = "\n";
 
+		$table = new cli\Table();
+		$table->setHeaders( Array(
+			'ID',
+			'email',
+			'profile',
+			'First name',
+			'Last name'
+			)
+		);
+
 		foreach ( $profiles as $profile ) {
 
 			$employees = Employee::getEmployeesByProfile($profile['id_profile']);
@@ -32,14 +42,18 @@ class PS_CLI_EMPLOYEE {
 
 			foreach ( $employees as $employee ) {
 
-				echo $employee['id_employee'] . $fieldSeparator .
-				     $employee['firstname'] . $fieldSeparator .
-				     $employee['lastname'] . $fieldSeparator .
-				     $employee['email'] . $fieldSeparator .
-				     $profile['name'] . $fieldSeparator .
-				     $lineSeparator;
+				$table->addRow( Array(
+					$employee['id_employee'],
+					$employee['email'],
+					$profile['name'],
+					$employee['firstname'],
+					$employee['lastname']
+					)
+				);
 			}
 		}
+
+		$table->display();
 	}
 
 	public static function delete_employee( $employeeEmail, $force = false ) {
@@ -199,7 +213,7 @@ class PS_CLI_EMPLOYEE {
 	public static function change_employee_password($employeeEmail, $newPassword) {
 
 		if ( !Validate::isEmail($employeeEmail) ) {
-			echo "$email is not a valid email address\n";
+			echo "$employeeEmail is not a valid email address\n";
 			return false;
 		}
 
@@ -227,5 +241,68 @@ class PS_CLI_EMPLOYEE {
 			return false;
 		}
 	}
+
+	public static function edit_employee($email, $password = NULL, $profile = NULL, $firstname = NULL, $lastname = NULL) {
+		if (!Validate::isEmail($email)) {
+			echo "$email is not a valid email address\n";
+			return false;
+		}
+
+		$employee = new Employee();
+		if (! $employee->getByEmail($email)) {
+			echo "Could not find an employee with email $email\n";
+			return false;
+		}
+
+		if ($password != NULL) {
+			$employee->passwd = md5(_COOKIE_KEY_ . $password);
+		}
+
+		if ($profile != NULL) {
+			if (!Validate::isInt($profile)) {
+				echo "$profile is not a valid profile ID\n";
+				return false;
+			}
+
+			$employee->id_profile = $profile;
+		}
+
+		if($firstname != NULL) {
+			$employee->firstname = $firstname;
+		}
+
+		if($lastname != NULL) {
+			$employee->lastname = $lastname;
+		}
+
+		$res = $employee->update();
+
+		if($res) {
+			echo "Successfully updated user $email\n";
+			return true;
+		}
+		else {
+			echo "Error, could not update user $email\n";
+			return false;
+		}
+	}
+
+	public static function get_any_superadmin_id() {
+
+		$users = Employee::getEmployees();
+
+		$superadminID = NULL;
+
+		foreach ($users as $user) {
+
+			if ($user['id_employee'] == PS_CLI_PROFILE::_SUPERADMIN_PROFILE_ID_) {
+				$superadminID = $user['id_employee'];
+			}
+		}
+
+		return $superadminID;
+	}
+
 }
+
 ?>

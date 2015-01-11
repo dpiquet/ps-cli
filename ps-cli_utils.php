@@ -7,26 +7,38 @@ class PS_CLI_UTILS {
 
 	public static $VERBOSE = false;
 	public static $ALLOW_ROOT = false;
+	public static $LANG = NULL;
 
 	private static $_cli = false;
 
 	public static function ps_cli_initialize() {
+		self::$LANG = Configuration::get('PS_LANG_DEFAULT');
+
+		self::_load_ps_cli_dependancies();
 		self::ps_cli_init_admin_context();
+	}
+
+	private static function _load_ps_cli_dependancies() {
+		require_once('php-cli-tools/load-php-cli-tools.php');
+
+		// include garden-cli argument parser
+		require_once('garden-cli/Args.php');
+		require_once('garden-cli/Cli.php');
+		require_once('garden-cli/Table.php');
+
 	}
 
 	public static function ps_cli_init_admin_context() {
 		$context = Context::getContext();
 
 		// todo: load admin list and pick from it instead of assuming there's a user '1
-		$context->employee = new Employee(1);
+		$context->employee = new Employee(PS_CLI_EMPLOYEE::get_any_superadmin_id());
+
+		$context->shop = new Shop(Configuration::get('PS_SHOP_DEFAULT'));
 	}
 
 	public static function parse_arguments() {
 
-		// include garden-cli argument parser
-		require_once('garden-cli/Args.php');
-		require_once('garden-cli/Cli.php');
-		require_once('garden-cli/Table.php');
 
 		self::$_cli = Garden\Cli\Cli::Create()
 			->command('modules')
@@ -43,6 +55,8 @@ class PS_CLI_UTILS {
 				->opt('disable-overrides', 'Disable modules overrides', false)
 				->opt('enable-non-native', 'Enable non native modules', false)
 				->opt('disable-non-native', 'Disable non native modules', false)
+				->opt('enable-check-update', 'Enable auto check for updates', false)
+				->opt('disable-check-update', 'Disable auto check for updates', false)
 				->arg('<modulename>', 'The module to activate', true)
 
 			->command('core')
@@ -72,10 +86,25 @@ class PS_CLI_UTILS {
 				->opt('first-name', 'Employee first name', false, 'string')
 				->opt('last-name', 'Employee last name', false, 'string')
 
+			->command('profile')
+				->description('Manage PrestaShop profiles')
+				->opt('list', 'List profiles', false)
+
 			->command('shop')
 				->description('Control shop')
-				->opt('enable', 'Enable shop', false)
-				->opt('disable', 'Disable shop', false)
+				->opt('enable', 'Turn on maintenance mode on the shop', false)
+				->opt('disable', 'Turn off maintenance mode on the shop', false)
+
+			->command('db')
+				->description('Perform database operations')
+				->opt('backup', 'Create a backup', false)
+
+			->command('theme')
+				->description('Manage PrestaShop themes')
+				->opt('list', 'List themes', false)
+				->opt('list-available', 'List themes', false)
+				->opt('install', 'Install theme', false)
+				->arg('theme', 'Theme id', false)
 
 			->command('*')
 				->opt(
@@ -87,6 +116,11 @@ class PS_CLI_UTILS {
 				->opt(
 					'verbose',
 					'Enable verbose mode',
+					false
+				)
+				->opt(
+					'lang',
+					'Set the language to use',
 					false
 				)
 				->opt(
@@ -108,6 +142,32 @@ class PS_CLI_UTILS {
 			self::$VERBOSE = true;
 		}
 
+		if ($langOpt = $args->getOpt('lang', false)) {
+			if( $langOpt === "1" ) {
+				echo "You must specify an isocode with --lang\n";
+				exit(1);
+			}
+
+			//we must check if iso code validates to avoid a die in ps code
+			if (!Validate::isLanguageIsoCode($langOpt)) {
+				echo "Error, $langOpt is not a valid iso code\n";
+				exit(1);
+			}
+
+			$langID = Language::getIdByIso($langOpt);
+			$language = new Language($langID);
+			if (Validate::isLoadedObject($language)) {
+				self::$LANG = $langID;
+			}
+			else {
+				echo "Error, could not load language $langOpt\n";
+				exit(1);
+			}
+
+			$context = Context::getContext();
+			$context->language = $language;
+		}
+
 		// check if we have to switch shop id in context
 		if( $opt = $args->getOpt('shopid', false) ) {
 			PS_CLI_SHOPS::set_current_shop_context($opt);
@@ -120,23 +180,35 @@ class PS_CLI_UTILS {
 		$command = $args->getCommand();
 		switch($command) {
 			case 'modules':
-				self::parse_modules_arguments($args);
+				self::_parse_modules_arguments($args);
 				break;
 
 			case 'core':
-				self::parse_core_arguments($args);
+				self::_parse_core_arguments($args);
 				break;
 			
 			case 'cache':
-				self::parse_cache_arguments($args);
+				self::_parse_cache_arguments($args);
 				break;
 
 			case 'employee':
-				self::parse_employee_arguments($args);
+				self::_parse_employee_arguments($args);
+				break;
+
+			case 'profile':
+				self::_parse_profile_arguments($args);
 				break;
 
 			case 'shop':
-				self::parse_shop_arguments($args);
+				self::_parse_shop_arguments($args);
+				break;
+
+			case 'db':
+				self::_parse_db_arguments($args);
+				break;
+
+			case 'theme':
+				self::_parse_theme_arguments($args);
 				break;
 
 			default:
@@ -148,7 +220,7 @@ class PS_CLI_UTILS {
 		return;
 	}
 
-	private static function parse_cache_arguments(Garden\Cli\Args $arguments) {
+	private static function _parse_cache_arguments(Garden\Cli\Args $arguments) {
 		if ($opt = $arguments->getOpt('cache-status', false)) {
 			PS_CLI_CORE::print_cache_status();
 		}
@@ -204,7 +276,7 @@ class PS_CLI_UTILS {
 		return;
 	}
 
-	private static function parse_core_arguments(Garden\Cli\Args $arguments) {
+	private static function _parse_core_arguments(Garden\Cli\Args $arguments) {
 
 		if ($opt = $arguments->getOpt('check-version', false)) {
 			PS_CLI_CORE::core_check_version();
@@ -220,7 +292,7 @@ class PS_CLI_UTILS {
 		return;
 	}
 
-	private static function parse_modules_arguments(Garden\Cli\Args $arguments) {
+	private static function _parse_modules_arguments(Garden\Cli\Args $arguments) {
 
 		$status = null;
 
@@ -235,7 +307,7 @@ class PS_CLI_UTILS {
 			$status = PS_CLI_MODULES::enable_module($opt);
 		}
 		elseif ($opt = $arguments->getOpt('disable', false)) {
-			if ($otp === "1") {
+			if ($opt === "1") {
 				self::_show_command_usage('modules');
 				exit(1);
 			}
@@ -263,7 +335,7 @@ class PS_CLI_UTILS {
 				self::_show_command_usage('modules');
 				exit(1);
 			}
-			$status PS_CLI_MODULES::uninstall_module($opt);
+			$status = PS_CLI_MODULES::uninstall_module($opt);
 		}
 		elseif ($opt = $arguments->getOpt('list', false)) {
 			$status = PS_CLI_MODULES::print_module_list();
@@ -286,6 +358,14 @@ class PS_CLI_UTILS {
 		elseif ($opt = $arguments->getOpt('disable-non-native', false)) {
 			$status = PS_CLI_MODULES::disable_non_native_modules();
 		}
+		elseif ($opt = $arguments->getOpt('enable-check-update', false)) {
+			//todo
+			exit(1);
+		}
+		elseif ($opt = $arguments->getOpt('disable-check-update', false)) {
+			//todo
+			exit(1);
+		}
 		else {
 			self::_show_command_usage('modules');
 			exit(1);
@@ -299,11 +379,11 @@ class PS_CLI_UTILS {
 		exit(0);
 	}
 
-	private static function parse_themes_arguments($arguments) {
+	private static function _parse_themes_arguments($arguments) {
 		return;
 	}
 
-	private static function parse_employee_arguments($arguments) {
+	private static function _parse_employee_arguments(Garden\Cli\Args $arguments) {
 
 		$status = null;
 
@@ -337,14 +417,14 @@ class PS_CLI_UTILS {
 
 		// todo: support for all options (optin, active, defaultTab, ...)
 		elseif ($email = $arguments->getOpt('create', false)) {
-			if ($password === "1") {
+			if ($email === "1") {
 				self::_show_command_usage('employee');
 				exit(1);
 			}
 
 			$pwdError = 'You must provide a password for the employee';
 			if ($password = $arguments->getOpt('password', false)) {
-				if ($opt === "1") {
+				if ($password === "1") {
 					self::_show_command_usage('employee', $pwdError);
 					exit(1);
 				}
@@ -356,7 +436,7 @@ class PS_CLI_UTILS {
 
 			$profileError = 'You must provide a profile for the Employee';
 			if ($profile = $arguments->getOpt('profile', false)) {
-				if($opt === "1") {
+				if($profile === "1") {
 					self::_show_command_usage('employee', $profileError);
 					exit(1);
 				}
@@ -398,6 +478,67 @@ class PS_CLI_UTILS {
 				$lastname
 			);	
 		}
+		elseif ($email = $arguments->getOpt('edit', false)) {
+	
+			if($email === "1") {
+				echo "You must specify an email address!\n";
+				self::_show_command_usage();
+				exit(1);
+			}
+
+			if ($password = $arguments->getOpt('password', false)) {
+				if($password === "1") {
+					echo "You must specify a password with --password option\n";
+					exit(1);
+				}	
+			}
+			else {
+				$password = NULL;
+			}
+
+			if ($profile = $arguments->getOpt('profile', false)) {
+				//usual check === 1 cannot work with int values
+				if (!Validate::isInt($profile)) {
+					echo "$profile is not a valid profile id\n";
+					exit(1);
+				}
+			}
+			else {
+				$profile = NULL;
+			}
+
+			if ($firstname = $arguments->getOpt('firstname', false)) {
+				if ($firstname === "1") {
+					echo "You must specify a name with --firstname option\n";
+					exit(1);
+				}
+			}
+			else {	
+				$firstname = NULL;
+			}
+
+			if ($lastname = $arguments->getOpt('lastname', false)) {
+				if ($firstname === "1") {
+					echo "You must specify a name with --lastname option\n";
+					exit(1);
+				}
+			}
+			else {	
+				$lastname = NULL;
+			}
+
+			$res = PS_CLI_EMPLOYEE::edit_employee($email, $password, $profile, $firstname, $lastname);
+
+			if ($res) {
+				echo "Employee $email successfully updated\n";
+				exit(0);
+			}
+			else {
+				echo "Error, could not update employee $email\n";
+				exit(1);
+			}
+
+		}
 		else {
 			self::_show_command_usage('employee');
 			exit(1);
@@ -410,7 +551,7 @@ class PS_CLI_UTILS {
 		exit(0);
 	}
 
-	private static function parse_shop_arguments($arguments) {
+	private static function _parse_shop_arguments(Garden\Cli\Args $arguments) {
 
 		$status = NULL;
 
@@ -428,6 +569,58 @@ class PS_CLI_UTILS {
 		if ($status === false) {
 			exit(1);
 		}
+
+		exit(0);
+	}
+
+	private static function _parse_db_arguments(Garden\Cli\Args $arguments) {
+		if($opt = $arguments->getOpt('backup', false)) {
+			$ret = PS_CLI_DB::database_create_backup();
+	
+			if ($ret === false) {
+				exit(1);
+			}
+			else {
+				echo "$ret\n";
+				exit(0);
+			}
+		}
+		else {
+			self::_show_command_usage('db');
+			exit(1);
+		}
+		
+		exit(0);
+	}
+
+	private static function _parse_theme_arguments(Garden\Cli\Args $arguments) {
+		if ($opt = $arguments->getOpt('list', false)) {
+			PS_CLI_THEMES::print_theme_list();
+			exit(0);
+		}
+
+		elseif($opt = $arguments->getOpt('list-available', false)) {
+			PS_CLI_THEMES::print_available_themes();
+			exit(0);
+		}
+		elseif($theme = $arguments->getOpt('install', false)) {
+			if ($theme === "1") {
+				echo "You must specify a theme to install\n";
+				exit(1);
+			}
+
+			PS_CLI_THEMES::install_theme($theme);
+
+			exit(0);
+		}
+		else {
+			self::_show_command_usage('theme');
+			exit(1);
+		}
+	}
+
+	private static function _parse_profile_arguments(Garden\Cli\Args $arguments) {
+		PS_CLI_PROFILE::print_profile_list();
 
 		exit(0);
 	}

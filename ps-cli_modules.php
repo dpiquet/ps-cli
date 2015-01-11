@@ -231,10 +231,15 @@ class PS_CLI_MODULES {
 		switch($status) {
 
 			case 'all':
-				$mask = "| %3.3s | %32.32s | %12.12s | %12.12s | %12.12s |";
-
-				printf($mask, 'ID', 'Name', 'Installed', 'Active', 'Upgradable');
-				echo "\n";
+				$table = new cli\Table();
+				$table->setHeaders( Array(
+					'ID',
+					'Name',
+					'Installed',
+					'Active',
+					'Upgradable'
+					)
+				);
 
 				foreach( $modulesOnDisk as $module ) {
 					$module->installed ? $iStat = 'Yes' : $iStat = 'No';
@@ -248,13 +253,14 @@ class PS_CLI_MODULES {
 						$uStat = 'No';
 					}
 
-
-					printf($mask, "$module->id" ,
-					     "$module->name" ,
-					     " $iStat" ,
-					     " $aStat",
-					     " $uStat");
-					echo "\n";
+					$table->addRow( Array(
+						$module->id,
+						$module->name,
+						$iStat,
+						$aStat,
+						$uStat
+						)
+					);
 				}
 				break;
 
@@ -283,6 +289,10 @@ class PS_CLI_MODULES {
 			default:
 				return false;
 				break;
+		}
+
+		if($table) {
+			$table->display();
 		}
 
 		return true;

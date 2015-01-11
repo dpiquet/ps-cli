@@ -14,7 +14,10 @@ class PS_CLI_DB {
 		$backupCore->psBackupAll = true;
 		$backupCore->psBackupDropTable = true;
 
-		$backupCore->add();
+		if (! $backupCore->add() ) {
+			echo "Error, could not backup database\n";
+			return false;
+		}
 
 		return $backupCore->id;
 	}
