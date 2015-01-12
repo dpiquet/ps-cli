@@ -620,7 +620,14 @@ class PS_CLI_UTILS {
 	}
 
 	private static function _parse_profile_arguments(Garden\Cli\Args $arguments) {
-		PS_CLI_PROFILE::print_profile_list();
+
+		if ($opt = $arguments->getOpt('list', false)) {
+			PS_CLI_PROFILE::print_profile_list();
+		}
+		else {
+			self::_show_command_usage('profile');
+			exit(1);
+		}
 
 		exit(0);
 	}

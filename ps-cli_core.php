@@ -20,17 +20,50 @@ class PS_CLI_CORE {
 		else { echo 'Prestashop is up to date'; }
 	}
 
+	// todo: follow php-cli-tools official repo to implement countRows method and conditionnaly display
 	public static function core_list_changed_files() {
 		$upgrader = new UpgraderCore;
 		$files = $upgrader->getChangedFilesList();
 
+		// as in AdminInformationController.php
+		$excludeRegexp = '(install(-dev|-new)?|themes|tools|cache|docs|download|img|localization|log|mails|translations|upload|modules|override/(:?.*)index.php$)';
+
+		$modFiles = Array();
+
 		if($files) {
+			$table = new Cli\Table();
+
+			$table->setHeaders(Array('Part', 'file'));
+
 			foreach ( $files as $changedFileKey => $changedFileVal ) {
-				echo "$changedFileKey\n";
+
+				if (!isset($modFiles[$changedFileKey])) {
+					$modFiles[$changedFileKey] = Array();
+				}
+
 				foreach ( $changedFileVal as $modifiedFiles ) {
-					echo "  $modifiedFiles\n";
+					if (preg_match('#^'.$excludeRegexp.'#', $modifiedFiles)) {
+						continue;
+					}
+					array_push($modFiles[$changedFileKey], $modifiedFiles);
 				}
 			}
+
+			foreach ($modFiles as $curModFiles => $values) {
+
+				if (empty($values)) {
+					continue;
+				}
+
+				//echo "$curModFiles:\n";
+
+				foreach($values as $value) {
+					//echo "  $value\n";
+					$table->addRow(Array($curModFiles, $value));
+				}
+			}
+
+			$table->display();
 		}
 		
 		return;
