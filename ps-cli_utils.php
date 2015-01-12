@@ -106,6 +106,10 @@ class PS_CLI_UTILS {
 				->opt('install', 'Install theme', false)
 				->arg('theme', 'Theme id', false)
 
+			->command('cms')
+				->description('Manage PrestaShop CMS')
+				->opt('list-categories', 'List categories', false)
+
 			->command('*')
 				->opt(
 					'shopid',
@@ -209,6 +213,10 @@ class PS_CLI_UTILS {
 
 			case 'theme':
 				self::_parse_theme_arguments($args);
+				break;
+
+			case 'cms':
+				self::_parse_cms_arguments($args);
 				break;
 
 			default:
@@ -626,6 +634,18 @@ class PS_CLI_UTILS {
 		}
 		else {
 			self::_show_command_usage('profile');
+			exit(1);
+		}
+
+		exit(0);
+	}
+
+	private static function _parse_cms_arguments(Garden\Cli\Args $arguments) {
+		if($opt = $arguments->getOpt('list-categories', false)) {
+			PS_CLI_CMS::list_categories();
+		}
+		else {
+			self::_show_command_usage('cms');
 			exit(1);
 		}
 

@@ -75,6 +75,7 @@ require_once('ps-cli_utils.php');
 require_once('ps-cli_employee.php');
 require_once('ps-cli_shops.php');
 require_once('ps-cli_profile.php');
+require_once('ps-cli_cms.php');
 
 // init context, etc...
 PS_CLI_UTILS::ps_cli_initialize();
