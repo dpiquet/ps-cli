@@ -172,8 +172,6 @@ class PS_CLI_IMAGES {
 
 		print_r($images);
 	}
-
-
 }
 
 ?>

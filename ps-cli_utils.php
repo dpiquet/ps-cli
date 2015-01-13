@@ -117,6 +117,10 @@ class PS_CLI_UTILS {
 				->opt('list', 'List images', false)
 				->opt('regenerate-thumbs', 'Regenerate thumbnails', false)
 
+			->command('url')
+				->description('Manage SEO & URL')
+				->opt('list-rewritings', false)
+
 			->command('*')
 				->opt(
 					'shopid',
@@ -228,6 +232,10 @@ class PS_CLI_UTILS {
 
 			case 'image':
 				self::_parse_image_arguments($args);
+				break;
+
+			case 'url':
+				self::_parse_url_arguments($args);
 				break;
 
 			default:
@@ -455,7 +463,8 @@ class PS_CLI_UTILS {
 
 			$profileError = 'You must provide a profile for the Employee';
 			if ($profile = $arguments->getOpt('profile', false)) {
-				if($profile === "1") {
+				//if($profile === "1") {
+				if(!Validate::isInt($profile)) {
 					self::_show_command_usage('employee', $profileError);
 					exit(1);
 				}
@@ -682,6 +691,18 @@ class PS_CLI_UTILS {
 		exit (0);
 	}
 
+	private static function _parse_url_arguments(Garden\Cli\Args $arguments) {
+		if($opt = $arguments->getOpt('list-rewritings', false)) {
+			PS_CLI_URL::list_rewritings();
+		}
+		else {
+			self::_show_command_usage('url');
+			exit(1);
+		}
+
+		exit(0);
+	}
+
 	public static function check_user_root() {
 		if (self::$ALLOW_ROOT) {
 			return;
@@ -701,7 +722,7 @@ class PS_CLI_UTILS {
 
 	private static function _show_command_usage($command, $error = false) {
 		if($error) {
-			$error = self::$_CLI->red($error);
+			$error = self::$_cli->red($error);
 			echo("$error\n");
 		}
 
