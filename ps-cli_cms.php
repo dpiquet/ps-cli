@@ -15,6 +15,7 @@ class PS_CLI_CMS {
 				'updated',
 				'position',
 				'name',
+				'lang',
 				'description',
 				'link_rewrite'
 				)
@@ -43,6 +44,7 @@ class PS_CLI_CMS {
 			$current['infos']['date_upd'],
 			$current['infos']['position'],
 			$current['infos']['name'],
+			Language::getIsoById($current['infos']['id_lang']),
 			$current['infos']['description'],
 			$current['infos']['link_rewrite']
 			)
@@ -53,6 +55,53 @@ class PS_CLI_CMS {
 				self::_table_recurse_categories($categories, $categories[$id_category][$key], $key, $table);
 			}
 		}	
+	}
+
+	public static function create_category($parent, $name, $linkRewrite) {
+		echo "Not implemented\n";
+		return false;
+	}
+
+	public static function list_pages() {
+
+		$context = Context::getContext();
+
+		$table = new Cli\Table();
+
+		$table->setHeaders( Array(
+			'id',
+			'category',
+			'position',
+			'active',
+			'indexation',
+			'lang',
+			'title',
+			'rewrite',
+			'keywords'
+			)
+		);
+
+		//$pages = CMS::listCms($context->language->id);
+		$pages = CMS::getCMSPages($context->language->id);
+
+		foreach ($pages as $page) {
+			$table->addRow(Array(
+				$page['id_cms'],
+				$page['id_cms_category'],
+				$page['position'],
+				$page['active'],
+				$page['indexation'],
+				Language::getIsoById($page['id_lang']),
+				$page['meta_title'],
+				$page['link_rewrite'],
+				$page['meta_keywords']
+				)
+			);
+		}
+
+		$table->display();
+
+		return true;
 	}
 }
 

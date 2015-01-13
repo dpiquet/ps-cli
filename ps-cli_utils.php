@@ -109,6 +109,13 @@ class PS_CLI_UTILS {
 			->command('cms')
 				->description('Manage PrestaShop CMS')
 				->opt('list-categories', 'List categories', false)
+				->opt('list-pages', 'List pages', false)
+				->arg('id', 'Category or page ID', false)
+
+			->command('image')
+				->description('Manage PrestaShop images')
+				->opt('list', 'List images', false)
+				->opt('regenerate-thumbs', 'Regenerate thumbnails', false)
 
 			->command('*')
 				->opt(
@@ -217,6 +224,10 @@ class PS_CLI_UTILS {
 
 			case 'cms':
 				self::_parse_cms_arguments($args);
+				break;
+
+			case 'image':
+				self::_parse_image_arguments($args);
 				break;
 
 			default:
@@ -644,12 +655,31 @@ class PS_CLI_UTILS {
 		if($opt = $arguments->getOpt('list-categories', false)) {
 			PS_CLI_CMS::list_categories();
 		}
+		elseif($opt = $arguments->getOpt('list-pages', false)) {
+			PS_CLI_CMS::list_pages();
+		}
 		else {
 			self::_show_command_usage('cms');
 			exit(1);
 		}
 
 		exit(0);
+	}
+
+	private static function _parse_image_arguments(Garden\Cli\Args $arguments) {
+
+		if ($opt = $arguments->getOpt('list', false)) {
+			PS_CLI_IMAGES::list_images();
+		}
+		elseif ($opt = $arguments->getOpt('regenerate-thumbs', false)) {
+			PS_CLI_IMAGES::regenerate_thumbnails();
+		}
+		else {
+			self::_show_command_usage('image');
+			exit(1);
+		}
+
+		exit (0);
 	}
 
 	public static function check_user_root() {
