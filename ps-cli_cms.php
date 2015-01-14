@@ -32,6 +32,19 @@ class PS_CLI_CMS {
 
 	}
 
+	//returns an array
+	public static function get_categories_array() {
+
+		$array = Array();
+
+		$context = Context::getContext();
+
+		$categories = CMSCategory::getCategories($context->language->id, false);
+		self::_array_recurse_categories($categories, $categories[0][1], 1, $array);
+
+		return $array;
+	}
+
 	//fills $table with categories infos
 	private static function _table_recurse_categories($categories, $current, $id_category = 1, &$table) {
 
@@ -53,6 +66,17 @@ class PS_CLI_CMS {
 		if (isset($categories[$id_category])) {
 			foreach (array_keys($categories[$id_category]) as $key) {
 				self::_table_recurse_categories($categories, $categories[$id_category][$key], $key, $table);
+			}
+		}	
+	}
+
+	private static function _array_recurse_categories($categories, $current, $id_category = 1, &$array) {
+
+		array_push($array, $current['infos']);
+
+		if (isset($categories[$id_category])) {
+			foreach (array_keys($categories[$id_category]) as $key) {
+				self::_array_recurse_categories($categories, $categories[$id_category][$key], $key, $array);
 			}
 		}	
 	}

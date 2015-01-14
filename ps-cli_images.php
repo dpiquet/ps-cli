@@ -3,10 +3,9 @@
 class PS_CLI_IMAGES {
 
 	//TODO: delete old support
-	//	types support (eg. regen only for cat or prods)
 
 	// adapted from PrestaShop AdminImagesController.php
-	public static function regenerate_thumbnails() {
+	public static function regenerate_thumbnails($regType = 'all', $deleteOldImages = true) {
 		$process = Array(
 			Array('type' => 'categories', 'dir' => _PS_CAT_IMG_DIR_),
 			Array('type' => 'manufacturers', 'dir' => _PS_MANU_IMG_DIR_),
@@ -19,12 +18,23 @@ class PS_CLI_IMAGES {
 		$languages = Language::getLanguages(false);
 
 		foreach($process as $proc) {
+
+			if (($regType != 'all') && ($regType != $proc['type'])) {
+				continue;
+			}
+
+			echo "Regenerating ".$proc['type']." thumbnails\n";
+
 			$formats = ImageType::getImagesTypes($proc['type']);
 
 			if ($proc['type'] == 'products') {
 				$isProduct = true;
 			}
 			else { $isProduct = false; }
+
+			if ($deleteOldImages) {
+				self::_delete_old_images($proc['dir'], $formats, $isProduct);
+			}
 
 			$ret = self::_regenerate_new_images($proc['dir'], $formats, $isProduct);
 
@@ -165,6 +175,58 @@ class PS_CLI_IMAGES {
                 }
 
 		return !$errors;
+	}
+
+	// adapted from PrestaShop's AdminImageController.php
+	private static function _delete_old_images($dir, $type, $product = false) {
+		if (!is_dir($dir)) {
+                        return false;
+		}
+
+                $toDel = scandir($dir);
+
+                foreach ($toDel as $d) {
+                        foreach ($type as $imageType) {
+                                if (preg_match('/^[0-9]+\-'.($product ? '[0-9]+\-' : '').$imageType['name'].'\.jpg$/', $d) 
+                                        || (count($type) > 1 && preg_match('/^[0-9]+\-[_a-zA-Z0-9-]*\.jpg$/', $d))
+                                        || preg_match('/^([[:lower:]]{2})\-default\-'.$imageType['name'].'\.jpg$/', $d)) {
+                                        if (file_exists($dir.$d)) {
+                                                unlink($dir.$d);
+					}
+				}
+			}
+		}
+
+                // delete product images using new filesystem.
+                if ($product) {
+
+                        $productsImages = Image::getAllImages();
+                        foreach ($productsImages as $image) {
+
+                                $imageObj = new Image($image['id_image']);
+                                $imageObj->id_product = $image['id_product'];
+
+                                if (file_exists($dir.$imageObj->getImgFolder())) {
+
+                                        $toDel = scandir($dir.$imageObj->getImgFolder());
+
+                                        foreach ($toDel as $d) {
+
+                                                foreach ($type as $imageType) {
+
+                                                        if (preg_match('/^[0-9]+\-'.$imageType['name'].'\.jpg$/', $d) || (count($type) > 1 && preg_match('/^[0-9]+\-[_a-zA-Z0-9-]*\.jpg$/', $d))) {
+
+                                                                if (file_exists($dir.$imageObj->getImgFolder().$d)) {
+                                                                        unlink($dir.$imageObj->getImgFolder().$d);
+								}
+							}
+						}
+					}
+                                }
+                        }
+                }
+
+		return true;
 	}
 
 	public static function list_images() {

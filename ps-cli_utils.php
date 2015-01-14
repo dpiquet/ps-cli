@@ -39,7 +39,6 @@ class PS_CLI_UTILS {
 
 	public static function parse_arguments() {
 
-
 		self::$_cli = Garden\Cli\Cli::Create()
 			->command('modules')
 				->description('Manage PrestaShop modules')
@@ -116,10 +115,25 @@ class PS_CLI_UTILS {
 				->description('Manage PrestaShop images')
 				->opt('list', 'List images', false)
 				->opt('regenerate-thumbs', 'Regenerate thumbnails', false)
+				->opt('category', 'Specify images category (all, products, categories, manufacturers, suppliers, scenes, stores', false, 'string')
+				->opt('keep-old-images', 'Keep old images', false)
 
 			->command('url')
 				->description('Manage SEO & URL')
 				->opt('list-rewritings', false)
+
+			->command('multistore')
+				->description('Perform Multistore operations')
+				->opt('list-shops', 'List shops')
+				->opt('list-groups', 'List shop groups')
+				->opt('enable-multistore', 'Enable multistore feature')
+				->opt('disable-multistore', 'Disable multistore feature')
+
+			->command('export')
+				->description('Export PrestaShop data')
+				->opt('categories', 'export catalog categories', false)
+				->opt('csv', 'export in CSV format', false)
+				->arg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false)
 
 			->command('*')
 				->opt(
@@ -236,6 +250,14 @@ class PS_CLI_UTILS {
 
 			case 'url':
 				self::_parse_url_arguments($args);
+				break;
+
+			case 'multistore':
+				self::_parse_multistore_arguments($args);
+				break;
+
+			case 'export':
+				self::_parse_export_arguments($args);
 				break;
 
 			default:
@@ -358,7 +380,7 @@ class PS_CLI_UTILS {
 			$status = PS_CLI_MODULES::install_module($opt);
 		}
 		elseif ($opt = $arguments->getOpt('uninstall', false)) {
-			if ($otp === "1") {
+			if ($opt === "1") {
 				self::_show_command_usage('modules');
 				exit(1);
 			}
@@ -681,7 +703,37 @@ class PS_CLI_UTILS {
 			PS_CLI_IMAGES::list_images();
 		}
 		elseif ($opt = $arguments->getOpt('regenerate-thumbs', false)) {
-			PS_CLI_IMAGES::regenerate_thumbnails();
+
+			if($category = $arguments->getOpt('category', false)) {
+				$cats = Array(
+					'categories',
+					'manufacturers',
+					'suppliers',
+					'scenes',
+					'products',
+					'stores',
+					'all'
+				);
+
+				if (!in_array($category, $cats)) {
+					$error = '--category must be ';
+
+					foreach ($cats as $cat) {
+						$error .= $cat. ' ';
+					}
+
+					self::_show_command_usage('image', $error);
+					exit(1);
+				}
+			}
+			else { $category = 'all'; }
+
+			if ($keepOld = $arguments->getOpt('keep-old-images', false)) {
+				$deleteOldImages = false;
+			}
+			else { $deleteOldImages = true; }
+
+			PS_CLI_IMAGES::regenerate_thumbnails($category, $deleteOldImages);
 		}
 		else {
 			self::_show_command_usage('image');
@@ -701,6 +753,39 @@ class PS_CLI_UTILS {
 		}
 
 		exit(0);
+	}
+
+	private static function _parse_multistore_arguments(Garden\Cli\Args $arguments) {
+		if($opt = $arguments->getOpt('list-shops', false)) {
+			PS_CLI_MULTISTORE::list_shops();
+		}
+		elseif($opt = $arguments->getOpt('list-groups', false)) {
+			PS_CLI_MULTISTORE::list_groups();
+		}
+		elseif($opt = $arguments->getOpt('enable-multistore', false)) {
+			PS_CLI_MULTISTORE::enable_multistore();
+		}
+		elseif($opt = $arguments->getOpt('disable-multistore', false)) {
+			PS_CLI_MULTISTORE::disable_multistore();
+		}
+		else {
+			self::_show_command_usage('multistore');
+			exit(1);
+		}
+
+		exit(0);
+	}
+
+	private static function _parse_export_arguments(Garden\Cli\Args $arguments) {
+
+		if($opt = $arguments->getOpt('categories', false)) {
+
+			PS_CLI_IMPORT::csv_export('categories');
+		}
+		else {
+			self::_show_command_usage('export');
+			exit(1);
+		}
 	}
 
 	public static function check_user_root() {
