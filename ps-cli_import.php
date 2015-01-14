@@ -70,14 +70,38 @@ class PS_CLI_IMPORT {
 				self::_csv_export_categories();
 				break;
 
+			case 'products':
+				self::_csv_export_products();
+				break;
+
 			default:
 				echo "Unknown data $what\n";
 				return false;
 		}
 	}
 
+	private static function _csv_export_products() {
+		$lang = PS_CLI_UTILS::$LANG;
+
+		$products = Product::getProducts($lang, 0, PHP_INT_MAX, 'id_product', 'ASC');
+
+		$FH = fopen('php://output', 'w');
+
+		foreach ($products as $product) {
+
+			print_r($product);
+
+
+			
+		}
+
+		fclose($FH);
+	}
+
 	private static function _csv_export_categories() {
 		$categories = Category::getCategories();
+
+		$FH = fopen('php://output', 'w');
 
 		$separator = ';';
 
@@ -87,50 +111,62 @@ class PS_CLI_IMPORT {
 		//   see http://pastebin.com/ARsTYmvQ for importable fields
 
 		//print a header	
-		echo 'id_category' 	. $separator .
-		'id_parent' 		. $separator .
-		'id_shop_default' 	. $separator .
-		'active' 		. $separator .
-		'date_add' 		. $separator .
-		'date_upd' 		. $separator .
-		'position' 		. $separator .
-		'is_root_category' 	. $separator .
-		'id_shop' 		. $separator .
-		'id_lang' 		. $separator .
-		'name' 			. $separator .
-		'description' 		. $separator .
-		'link_rewrite' 		. $separator .
-		'meta_title' 		. $separator .
-		'meta_keywords' 	. $separator .
-		'meta_description';
 
-		echo "\n";
+		$csvVals = Array(
+			'id_category',
+			'id_parent',	
+			'id_shop_default',
+			'active',
+			'date_add',
+			'date_upd',
+			'position',
+			'is_root_category',
+			'id_shop',
+			'id_lang',
+			'name',
+			'description',
+			'link_rewrite',
+			'meta_title',
+			'meta_keywords',
+			'meta_description'
+		);
+
+		fputcsv($FH, $csvVals, $separator);
 
 		foreach($categories as $category) {
 			foreach($category as $curCat) {
-//				print_r($curCat['infos']);
 
-				echo $curCat['infos']['id_category'] 	. $separator .
-				$curCat['infos']['id_parent'] 		. $separator .
-				$curCat['infos']['id_shop_default'] 	. $separator .
-				$curCat['infos']['active'] 		. $separator .
-				$curCat['infos']['date_add'] 		. $separator .
-				$curCat['infos']['date_upd'] 		. $separator .
-				$curCat['infos']['position'] 		. $separator .
-				$curCat['infos']['is_root_category'] 	. $separator .
-				$curCat['infos']['id_shop'] 		. $separator .
-				$curCat['infos']['id_lang'] 		. $separator .
-				$curCat['infos']['name'] 		. $separator .
-				$curCat['infos']['description'] 	. $separator .
-				$curCat['infos']['link_rewrite'] 	. $separator .
-				$curCat['infos']['meta_title'] 		. $separator .
-				$curCat['infos']['meta_keywords'] 	. $separator .
-				$curCat['infos']['meta_description'];
+				$csvVals = Array(
+					$curCat['infos']['id_category'],
+					$curCat['infos']['id_parent'],
+					$curCat['infos']['id_shop_default'],
+					$curCat['infos']['active'],
+					$curCat['infos']['date_add'],
+					$curCat['infos']['date_upd'],
+					$curCat['infos']['position'],
+					$curCat['infos']['is_root_category'],
+					$curCat['infos']['id_shop'],
+					$curCat['infos']['id_lang'],
+					self::_csv_filter($curCat['infos']['name']),
+					self::_csv_filter($curCat['infos']['description']),
+					self::_csv_filter($curCat['infos']['link_rewrite']),
+					self::_csv_filter($curCat['infos']['meta_title']),
+					self::_csv_filter($curCat['infos']['meta_keywords']),
+					self::_csv_filter($curCat['infos']['meta_description'])
+				);
 
-				echo "\n";
-				
+				fputcsv($FH, $csvVals, $separator);
 			}
 		}
+	}
+
+	private static function _csv_filter($content) {
+		$content = Tools::safeOutput($content);
+
+		//csv import do not like line returns
+		$content = preg_replace('/\n/', '', $content);
+
+		return $content;
 	}
 }
 

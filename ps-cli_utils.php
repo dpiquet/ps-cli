@@ -132,6 +132,7 @@ class PS_CLI_UTILS {
 			->command('export')
 				->description('Export PrestaShop data')
 				->opt('categories', 'export catalog categories', false)
+				->opt('products', 'export products', false)
 				->opt('csv', 'export in CSV format', false)
 				->arg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false)
 
@@ -781,6 +782,9 @@ class PS_CLI_UTILS {
 		if($opt = $arguments->getOpt('categories', false)) {
 
 			PS_CLI_IMPORT::csv_export('categories');
+		}
+		elseif($opt = $arguments->getOpt('products', false)) {
+			PS_CLI_IMPORT::csv_export('products');
 		}
 		else {
 			self::_show_command_usage('export');
