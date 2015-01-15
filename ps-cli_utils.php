@@ -34,7 +34,13 @@ class PS_CLI_UTILS {
 		// todo: load admin list and pick from it instead of assuming there's a user '1
 		$context->employee = new Employee(PS_CLI_EMPLOYEE::get_any_superadmin_id());
 
+		// some controllers die with fatal error if not set
+		Cache::store('isLoggedBack'.$context->employee->id, true);
+
 		$context->shop = new Shop(Configuration::get('PS_SHOP_DEFAULT'));
+
+		// load a generic front controller by default
+		$context->controller = new FrontController();
 	}
 
 	public static function parse_arguments() {
@@ -133,6 +139,7 @@ class PS_CLI_UTILS {
 				->description('Export PrestaShop data')
 				->opt('categories', 'export catalog categories', false)
 				->opt('products', 'export products', false)
+				->opt('customers', 'export customers', false)
 				->opt('csv', 'export in CSV format', false)
 				->arg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false)
 
@@ -785,6 +792,9 @@ class PS_CLI_UTILS {
 		}
 		elseif($opt = $arguments->getOpt('products', false)) {
 			PS_CLI_IMPORT::csv_export('products');
+		}
+		elseif($opt = $arguments->getOpt('customers', false)) {
+			PS_CLI_IMPORT::csv_export('customers');
 		}
 		else {
 			self::_show_command_usage('export');

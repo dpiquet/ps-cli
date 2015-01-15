@@ -74,6 +74,10 @@ class PS_CLI_IMPORT {
 				self::_csv_export_products();
 				break;
 
+			case 'customers':
+				self::_csv_export_customers();
+				break;
+
 			default:
 				echo "Unknown data $what\n";
 				return false;
@@ -83,15 +87,103 @@ class PS_CLI_IMPORT {
 	private static function _csv_export_products() {
 		$lang = PS_CLI_UTILS::$LANG;
 
+		//we must update the context before running getProducts()
+		$context = Context::getContext();
+		$context->controller = new AdminProductsController();
+
+		$separator = ';';
+
 		$products = Product::getProducts($lang, 0, PHP_INT_MAX, 'id_product', 'ASC');
 
 		$FH = fopen('php://output', 'w');
 
+		//print a header
+		$csvVals = Array(
+			'ID',
+			'name',
+			'active',
+			'manufacturer',
+			'id_supplier',
+			'available_for_order',
+			'available_now',
+			'available_later',
+			'ean13',
+			'upc',
+			'reference',
+			'supplier_reference',
+			'width',
+			'height',
+			'depth',
+			'price',
+			'wholesale_price',
+			'additional_shipping_cost',
+			'online_only',
+			'id_tax_rules_group',
+			'ecotax',
+			'minimal_quantity',
+			//0 = deny; 1 = allow; 2 = default
+			'out_of_stock',
+			'quantity',
+			'condition',
+			'customizable',
+			'date_add',
+			'date_upd',
+			'available_for_order',
+			'visibility',
+			'description',
+			'description_short',
+			'meta_keywords',
+			'meta_description',
+			'meta_title',
+			'link_rewrite'
+		);
+
+		fputcsv($FH, $csvVals, $separator);
+
 		foreach ($products as $product) {
 
-			print_r($product);
+			//print_r($product);
+			$csvVals = Array(
+				'ID',
+				self::_csv_filter($product['name']),
+				$product['active'],
+				self::_csv_filter($product['manufacturer_name']),
+				$product['id_supplier'],
+				$product['available_for_order'],
+				self::_csv_filter($product['available_now']),
+				self::_csv_filter($product['available_later']),
+				$product['ean13'],
+				$product['upc'],
+				self::_csv_filter($product['reference']),
+				self::_csv_filter($product['supplier_reference']),
+				$product['width'],
+				$product['height'],
+				$product['depth'],
+				$product['price'],
+				$product['wholesale_price'],
+				$product['additional_shipping_cost'],
+				$product['online_only'],
+				$product['id_tax_rules_group'],
+				$product['ecotax'],
+				$product['minimal_quantity'],
+				//0 = deny; 1 = allow; 2 = default
+				$product['out_of_stock'],
+				$product['quantity'],
+				$product['condition'],
+				$product['customizable'],
+				$product['date_add'],
+				$product['date_upd'],
+				$product['available_for_order'],
+				$product['visibility'],
+				self::_csv_filter($product['description']),
+				self::_csv_filter($product['description_short']),
+				self::_csv_filter($product['meta_keywords']),
+				self::_csv_filter($product['meta_description']),
+				self::_csv_filter($product['meta_title']),
+				self::_csv_filter($product['link_rewrite'])
+			);
 
-
+			fputcsv($FH, $csvVals, $separator);
 			
 		}
 
@@ -160,6 +252,34 @@ class PS_CLI_IMPORT {
 		}
 	}
 
+	private static function _csv_export_customers() {
+		$separator = ';';
+
+		$customers = Customer::getCustomers();
+
+		$FH = fopen('php://output', 'w');
+
+		$csvVals = Array(
+			'id_customer',
+			'email',
+			'firstname',
+			'lastname'
+		);
+
+		fputcsv($FH, $csvVals, $separator);
+
+		foreach ($customers as $customer) {
+			$csvVals = Array(
+				$customer['id_customer'],
+				$customer['email'],
+				$customer['firstname'],
+				$customer['lastname']
+			);
+
+			fputcsv($FH, $csvVals, $separator);
+		}
+	}
+
 	private static function _csv_filter($content) {
 		$content = Tools::safeOutput($content);
 
@@ -169,6 +289,5 @@ class PS_CLI_IMPORT {
 		return $content;
 	}
 }
-
 
 ?>
