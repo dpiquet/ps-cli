@@ -155,6 +155,12 @@ class PS_CLI_UTILS {
 					'integer'
 				)
 				->opt(
+					'groupid',
+					'Specify the target group id in multistore installs',
+					false,
+					'integer'
+				)
+				->opt(
 					'verbose',
 					'Enable verbose mode',
 					false
@@ -162,6 +168,11 @@ class PS_CLI_UTILS {
 				->opt(
 					'lang',
 					'Set the language to use',
+					false
+				)
+				->opt(
+					'global',
+					'Apply to all shops in multistore context',
 					false
 				)
 				->opt(
@@ -181,6 +192,14 @@ class PS_CLI_UTILS {
 		
 		if( $opt = $args->getOpt('verbose', false) ) {
 			self::$VERBOSE = true;
+		}
+
+		if($opt = $args->getOpt('global', false)) {
+			$context = Context::getContext();
+
+			$context->shop->id_shop_group = Shop::CONTEXT_ALL;
+
+			Shop::setContext(Shop::CONTEXT_ALL);
 		}
 
 		if ($langOpt = $args->getOpt('lang', false)) {
@@ -216,6 +235,13 @@ class PS_CLI_UTILS {
 			if (self::$VERBOSE) {
 				echo "Changing shop id to $opt\n";
 			}
+		}
+		if ($opt = $args->getOpt('groupid', false)) {
+			$context = Context::getContext();
+
+			$context->shop->shop_group_id = $opt;
+
+			Shop::setContext(Shop::CONTEXT_GROUP);
 		}
 
 		$command = $args->getCommand();
@@ -788,6 +814,11 @@ class PS_CLI_UTILS {
 		elseif($opt = $arguments->getOpt('disable-multistore', false)) {
 			PS_CLI_MULTISTORE::disable_multistore();
 		}
+		elseif($opt = $arguments->getOpt('create-shopgroup', false)) {
+
+			//todo: argument parsing
+			PS_CLI_MULTISTORE:: create_group($name, $shareCustomers, $shareStock, $shareOrders, $active = true); 
+		}
 		else {
 			self::_show_command_usage('multistore');
 			exit(1);
@@ -820,6 +851,8 @@ class PS_CLI_UTILS {
 			self::_show_command_usage('export');
 			exit(1);
 		}
+
+		exit(0);
 	}
 
 	public static function check_user_root() {

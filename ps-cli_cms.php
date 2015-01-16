@@ -106,7 +106,7 @@ class PS_CLI_CMS {
 		);
 
 		//$pages = CMS::listCms($context->language->id);
-		$pages = CMS::getCMSPages($context->language->id);
+		$pages = CMS::getCMSPages($context->language->id, null, false);
 
 		foreach ($pages as $page) {
 			$table->addRow(Array(
@@ -129,9 +129,16 @@ class PS_CLI_CMS {
 	}
 
 	public static function delete_page($pageId) {
-		$page = new CMS($pageId);
+		$context = Context::getContext();
+
+		$page = new CMS($pageId, $context->language->id);
+
+		//print_r($page);
 
 		if(Validate::isLoadedObject($page)) {
+
+			$page->context = $context;
+
 			if($page->delete()) {
 				echo "page $pageId successfully deleted\n";
 				return true;

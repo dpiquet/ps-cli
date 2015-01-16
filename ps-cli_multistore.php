@@ -98,6 +98,37 @@ class PS_CLI_MULTISTORE {
 
 	}
 
+	public static function create_group($name, $shareCustomers, $shareStock, $shareOrders, $active = true) {
+		if(!Validate::isBool($shareClient)) {
+			return false;
+		}
+		if (!Validate::isBool($shareQtty)) {
+			return false;
+		}
+		if(!Validate::isBool($shareOrders)) {
+			return false;
+		}
+
+
+		$shopGroup = new ShopGroup();
+
+		$shopGroup->name = $name;
+		$shopGroup->active = $active;
+		$shopGroup->share_customer = $shareCustomers;
+		$shopGroup->share_stock = $shareStock;
+		$shopGroup->share_order = $shareOrders;
+
+		// todo: echo shopgroupid
+		if($shopGroup->add()) {
+			echo "Shop group $name successfully created\n";
+			return true;
+		}
+		else {
+			echo "Error, could not create shop group $name\n";
+			return false;
+		}
+	}
+
 	public static function enable_multistore() {
 		$isEnabled = (bool)Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE');
 
