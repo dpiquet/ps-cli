@@ -532,6 +532,45 @@ class PS_CLI_MODULES {
 			return false;
 		}
 	}
+
+	public static function disable_update_check() {
+		$currentStatus = (int)Configuration::getGlobalValue('PRESTASTORE_LIVE');
+
+		if($currentStatus == 1) {
+			if (Configuration::updateGlobalValue('PRESTASTORE_LIVE', 0)) {
+				echo "Automatic modules updates check disabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not disable automatic modules updates check\n";
+				return false;
+			}
+		}
+		else {
+			echo "Automatic modules updates check is already disabled\n";
+			return true;
+		}
+	}
+
+	public static function enable_update_check() {
+		$currentStatus = (int)Configuration::getGlobalValue('PRESTASTORE_LIVE');
+
+		if($currentStatus == 0) {
+			if (Configuration::updateGlobalValue('PRESTASTORE_LIVE', 1)) {
+				echo "Automatic modules updates check enabled\n";
+				return true;
+			}
+			else {
+				echo "Error, could not enable automatic modules updates check\n";
+				return false;
+			}
+		}
+		else {
+			echo "Automatic modules updates check is already enabled\n";
+			return true;
+		}
+
+	}
 }
 
 ?>

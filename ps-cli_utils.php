@@ -115,6 +115,7 @@ class PS_CLI_UTILS {
 				->description('Manage PrestaShop CMS')
 				->opt('list-categories', 'List categories', false)
 				->opt('list-pages', 'List pages', false)
+				->opt('delete-page', 'Delete page', false)
 				->arg('id', 'Category or page ID', false)
 
 			->command('image')
@@ -142,6 +143,7 @@ class PS_CLI_UTILS {
 				->opt('customers', 'export customers', false)
 				->opt('manufacturers', 'export manufacturers', false)
 				->opt('suppliers', 'export suppliers', false)
+				->opt('orders', 'export orders', false)
 				->opt('csv', 'export in CSV format', false)
 				->arg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false)
 
@@ -418,12 +420,10 @@ class PS_CLI_UTILS {
 			$status = PS_CLI_MODULES::disable_non_native_modules();
 		}
 		elseif ($opt = $arguments->getOpt('enable-check-update', false)) {
-			//todo
-			exit(1);
+			$status = PS_CLI_MODULES::enable_update_check();
 		}
 		elseif ($opt = $arguments->getOpt('disable-check-update', false)) {
-			//todo
-			exit(1);
+			$status = PS_CLI_MODULES::disable_update_check();
 		}
 		else {
 			self::_show_command_usage('modules');
@@ -695,16 +695,26 @@ class PS_CLI_UTILS {
 	private static function _parse_cms_arguments(Garden\Cli\Args $arguments) {
 		if($opt = $arguments->getOpt('list-categories', false)) {
 			PS_CLI_CMS::list_categories();
+			$status = true;
 		}
 		elseif($opt = $arguments->getOpt('list-pages', false)) {
 			PS_CLI_CMS::list_pages();
+			$status = true;
+		}
+		elseif($opt = $arguments->getOpt('delete-page')) {
+			$status = PS_CLI_CMS::delete_page($opt);
 		}
 		else {
 			self::_show_command_usage('cms');
 			exit(1);
 		}
 
-		exit(0);
+		if($status === true) {
+			exit(0);
+		}
+		else {
+			exit(1);
+		}
 	}
 
 	private static function _parse_image_arguments(Garden\Cli\Args $arguments) {
@@ -802,6 +812,9 @@ class PS_CLI_UTILS {
 		}
 		elseif($opt = $arguments->getOpt('suppliers', false)) {
 			PS_CLI_IMPORT::csv_export('suppliers');
+		}
+		elseif($opt = $arguments->getOpt('orders', false)) {
+			PS_CLI_IMPORT::csv_export('orders');
 		}
 		else {
 			self::_show_command_usage('export');

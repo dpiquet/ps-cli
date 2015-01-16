@@ -86,6 +86,10 @@ class PS_CLI_IMPORT {
 				self::_csv_export_suppliers();
 				break;
 
+			case 'orders':
+				self::_csv_export_orders();
+				break;
+
 			default:
 				echo "Unknown data $what\n";
 				return false;
@@ -359,6 +363,90 @@ class PS_CLI_IMPORT {
 			);
 
 			fputcsv($FH, $csvVals, $separator);
+		}
+	}
+
+	private static function _csv_export_orders() {
+		$separator = ';';
+
+		$FH = fopen('php://output', 'w');
+
+		$csvVals = Array(
+			'id_order',
+			'reference',
+			'customer_firstname',
+			'customer_lastname',
+			'customer_email',
+			'payment',
+			'module',
+			'current_state',
+			'state_name',
+			'total_paid',
+			'siret',
+			'ape',
+			'company',
+			'invoice_date',
+			'delivery_date',
+			'total_products',
+			'total_products_wt',
+			'total_discounts',
+			'total_discounts_tax_incl',
+			'total_discounts_tax_excl',
+			'total_discounts',
+			'total_shipping',
+			'total_shipping_tax_incl',
+			'total_shipping_tax_excl',
+			'total_paid_tax_incl',
+			'total_paid_tax_excl',
+			'total_paid_real',
+			'active',
+			'is_guest'
+		);
+			
+
+		fputcsv($FH, $csvVals, $separator);
+
+		$orders = Order::getOrdersWithInformations();
+
+		
+
+		foreach ($orders as $order) {
+			//print_r($order);
+
+			$csvVals = Array(
+				$order['id_order'],
+				$order['reference'],
+				self::_csv_filter($order['firstname']),
+				self::_csv_filter($order['lastname']),
+				$order['email'],
+				$order['payment'],
+				$order['module'],
+				$order['current_state'],
+				$order['state_name'],
+				$order['total_paid'],
+				$order['siret'],
+				$order['ape'],
+				self::_csv_filter($order['company']),
+				$order['invoice_date'],
+				$order['delivery_date'],
+				$order['total_products'],
+				$order['total_products_wt'],
+				$order['total_discounts'],
+				$order['total_discounts_tax_incl'],
+				$order['total_discounts_tax_excl'],
+				$order['total_discounts'],
+				$order['total_shipping'],
+				$order['total_shipping_tax_incl'],
+				$order['total_shipping_tax_excl'],
+				$order['total_paid_tax_incl'],
+				$order['total_paid_tax_excl'],
+				$order['total_paid_real'],
+				$order['active'],
+				$order['is_guest']
+			);
+
+			fputcsv($FH, $csvVals, $separator);
+
 		}
 	}
 

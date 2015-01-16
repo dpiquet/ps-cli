@@ -127,6 +127,25 @@ class PS_CLI_CMS {
 
 		return true;
 	}
+
+	public static function delete_page($pageId) {
+		$page = new CMS($pageId);
+
+		if(Validate::isLoadedObject($page)) {
+			if($page->delete()) {
+				echo "page $pageId successfully deleted\n";
+				return true;
+			}
+			else {
+				echo "Error, could not delete page $pageId\n";
+				return false;
+			}
+		}
+		else {
+			echo "Could not load page ID $pageId\n";
+			return false;
+		}
+	}
 }
 
 ?>
