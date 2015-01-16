@@ -78,6 +78,14 @@ class PS_CLI_IMPORT {
 				self::_csv_export_customers();
 				break;
 
+			case 'manufacturers':
+				self::_csv_export_manufacturers();
+				break;
+
+			case 'suppliers':
+				self::_csv_export_suppliers();
+				break;
+
 			default:
 				echo "Unknown data $what\n";
 				return false;
@@ -274,6 +282,80 @@ class PS_CLI_IMPORT {
 				$customer['email'],
 				$customer['firstname'],
 				$customer['lastname']
+			);
+
+			fputcsv($FH, $csvVals, $separator);
+		}
+	}
+
+	private static function _csv_export_manufacturers() {
+		$separator = ';';
+
+		$manufacturers = Manufacturer::getManufacturers(false, PS_CLI_UTILS::$LANG, false);
+
+		$FH = fopen('php://output', 'w');
+
+		$csvVals = Array(
+			'id_manufacturer',
+			'name',
+			'date_add',
+			'date_upd',
+			'active',
+			'description',
+			'short_description',
+			'link_rewrite'
+		);
+
+		fputcsv($FH, $csvVals, $separator);
+
+		foreach($manufacturers as $manufacturer) {
+
+			$csvVals = Array(
+				$manufacturer['id_manufacturer'],
+				self::_csv_filter($manufacturer['name']),
+				$manufacturer['date_add'],
+				$manufacturer['date_upd'],
+				$manufacturer['active'],
+				self::_csv_filter($manufacturer['description']),
+				self::_csv_filter($manufacturer['short_description']),
+				self::_csv_filter($manufacturer['link_rewrite'])
+			);
+
+			fputcsv($FH, $csvVals, $separator);
+		}
+
+		fclose($FH);
+	}
+
+	private static function _csv_export_suppliers() {
+		$separator = ';';
+
+		$suppliers = Supplier::getSuppliers(false, PS_CLI_UTILS::$LANG, false);
+
+		$FH = fopen('php://output', 'w');
+
+		$csvVals = Array(
+			'id_supplier',
+			'name',
+			'date_add',
+			'date_upd',
+			'active',
+			'description',
+			'link_rewrite'
+		);
+
+		fputcsv($FH, $csvVals, $separator);
+
+		foreach ($suppliers as $supplier) {
+
+			$csvVals = Array(
+				$supplier['id_supplier'],
+				self::_csv_filter($supplier['name']),
+				$supplier['date_add'],
+				$supplier['date_upd'],
+				$supplier['active'],
+				self::_csv_filter($supplier['description']),
+				self::_csv_filter($supplier['link_rewrite'])
 			);
 
 			fputcsv($FH, $csvVals, $separator);

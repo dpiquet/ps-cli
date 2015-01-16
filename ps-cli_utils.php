@@ -140,6 +140,8 @@ class PS_CLI_UTILS {
 				->opt('categories', 'export catalog categories', false)
 				->opt('products', 'export products', false)
 				->opt('customers', 'export customers', false)
+				->opt('manufacturers', 'export manufacturers', false)
+				->opt('suppliers', 'export suppliers', false)
 				->opt('csv', 'export in CSV format', false)
 				->arg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false)
 
@@ -787,7 +789,6 @@ class PS_CLI_UTILS {
 	private static function _parse_export_arguments(Garden\Cli\Args $arguments) {
 
 		if($opt = $arguments->getOpt('categories', false)) {
-
 			PS_CLI_IMPORT::csv_export('categories');
 		}
 		elseif($opt = $arguments->getOpt('products', false)) {
@@ -795,6 +796,12 @@ class PS_CLI_UTILS {
 		}
 		elseif($opt = $arguments->getOpt('customers', false)) {
 			PS_CLI_IMPORT::csv_export('customers');
+		}
+		elseif($opt = $arguments->getOpt('manufacturers', false)) {
+			PS_CLI_IMPORT::csv_export('manufacturers');
+		}
+		elseif($opt = $arguments->getOpt('suppliers', false)) {
+			PS_CLI_IMPORT::csv_export('suppliers');
 		}
 		else {
 			self::_show_command_usage('export');
