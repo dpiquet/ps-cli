@@ -72,11 +72,16 @@ class PS_CLI_UTILS {
 			->command('cache')
 				->description('Manage PrestaShop cache')	
 				->opt('clear-cache', 'Clear smarty cache', false)
-				->opt('cache-status', 'show cache in use', false)
+				->opt('cache-status', 'show cache in use', false, 'string')
 				->opt('disable-cache', 'Disable PrestaShop cache', false)
 				->opt('enable-cache', 'Enable PrestaShop cache', false)
+				->opt('enable-css-cache', 'Enable CSS cache', false)
+				->opt('disable-css-cache', 'Disable CSS cache', false)
+				->opt('enable-js-cache', 'Enable JS cache', false)
+				->opt('disable-js-cache', 'Disable JS cache', false)
 				->opt('cache-depth', 'Set cache depth (default 1)', false, 'integer')
-				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
+				->opt('recompile-smarty', 'Set smarty compilation (allway, never, modified)', false, 'string')
+//				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
 
 			->command('employee')
 				->description('Manage PrestaShop employees')
@@ -97,8 +102,8 @@ class PS_CLI_UTILS {
 
 			->command('shop')
 				->description('Control shop')
-				->opt('enable', 'Turn on maintenance mode on the shop', false)
-				->opt('disable', 'Turn off maintenance mode on the shop', false)
+				->opt('enable', 'Turn off maintenance mode on the shop', false)
+				->opt('disable', 'Turn on maintenance mode on the shop', false)
 
 			->command('db')
 				->description('Perform database operations')
@@ -116,6 +121,8 @@ class PS_CLI_UTILS {
 				->opt('list-categories', 'List categories', false)
 				->opt('list-pages', 'List pages', false)
 				->opt('delete-page', 'Delete page', false)
+				->opt('disable-page', 'Disable a page', false)
+				->opt('enable-page', 'Enable a page', false)
 				->arg('id', 'Category or page ID', false)
 
 			->command('image')
@@ -131,10 +138,16 @@ class PS_CLI_UTILS {
 
 			->command('multistore')
 				->description('Perform Multistore operations')
-				->opt('list-shops', 'List shops')
-				->opt('list-groups', 'List shop groups')
-				->opt('enable-multistore', 'Enable multistore feature')
-				->opt('disable-multistore', 'Disable multistore feature')
+				->opt('list-shops', 'List shops', false)
+				->opt('list-groups', 'List shop groups', false)
+				->opt('create-group', 'Create a shop group', false)
+				->opt('enable-multistore', 'Enable multistore feature', false)
+				->opt('disable-multistore', 'Disable multistore feature', false)
+				->opt('active', '', false)
+				->opt('share-customers', 'share customers', false, 'boolean')
+				->opt('share-orders', 'share orders', false, 'boolean')
+				->opt('share-stock', 'share stock', false, 'boolean')
+				->opt('name', 'name', false, 'string')
 
 			->command('export')
 				->description('Export PrestaShop data')
@@ -308,6 +321,8 @@ class PS_CLI_UTILS {
 	}
 
 	private static function _parse_cache_arguments(Garden\Cli\Args $arguments) {
+		$status = true;
+
 		if ($opt = $arguments->getOpt('cache-status', false)) {
 			PS_CLI_CORE::print_cache_status();
 		}
@@ -350,10 +365,41 @@ class PS_CLI_UTILS {
 				$depth = 1;
 			}
 
-			PS_CLI_CORE::enable_cache($cache, $depth);
+			$status = PS_CLI_CORE::enable_cache($cache, $depth);
 		}
 		elseif ($opt = $arguments->getOpt('clear-cache', false)) {
-			PS_CLI_CORE::clear_smarty_cache();
+			$status = PS_CLI_CORE::clear_smarty_cache();
+		}
+		elseif($smarty = $arguments->getOpt('recompile-smarty', false)) {
+			$status = PS_CLI_CORE::smarty_template_compilation($smarty);
+		}
+		elseif($arguments->getOpt('enable-css-cache', false)) {
+			$successMsg = 'css cache enabled';
+			$errMsg = 'css cache could not be enabled';
+			$notChanged = 'css cache was already enabled';
+
+			$status = self::update_boolean_global_value('PS_CSS_THEME_CACHE', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-css-cache', false)) {
+			$successMsg = 'css cache disabled';
+			$errMsg = 'css cache could not be disabled';
+			$notChanged = 'css cache was already disabled';
+
+			$status = self::update_boolean_global_value('PS_CSS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('enable-js-cache', false)) {
+			$successMsg = 'js cache enabled';
+			$errMsg = 'js cache could not be enabled';
+			$notChanged = 'js cache was already enabled';
+
+			$status = self::update_boolean_global_value('PS_JS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-js-cache', false)) {
+			$successMsg = 'js cache disabled';
+			$errMsg = 'js cache could not be disabled';
+			$notChanged = 'js cache was already disabled';
+
+			$status = self::update_boolean_global_value('PS_JS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
 		}
 		else {
 			self::_show_command_usage('cache');
@@ -434,22 +480,46 @@ class PS_CLI_UTILS {
 			$status = PS_CLI_MODULES::upgrade_all_modules_database();
 		}
 		elseif ($opt = $arguments->getOpt('enable-overrides', false)) {
-			$status = PS_CLI_MODULES::enable_overrides();
+			$successMsg = 'modules overrides enabled';
+			$errMsg = 'modules overrides could not be enabled';
+			$notChanged = 'modules overrides were already enabled';
+
+			$status = self::update_boolean_global_value('PS_DISABLE_OVERRIDES', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-overrides', false)) {
-			$status = PS_CLI_MODULES::disable_overrides();
+			$successMsg = 'modules overrides disabled';
+			$errMsg = 'modules overrides could not be disabled';
+			$notChanged = 'modules overrides were already disabled';
+
+			$status = self::update_boolean_global_value('PS_DISABLE_OVERRIDES', false, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('enable-non-native', false)) {
-			$status = PS_CLI_MODULES::enable_non_native_modules();
+			$successMsg = 'non native modules enabled';
+			$errMsg = 'non native modules could not be enabled';
+			$notChanged = 'non native modules were already enabled';
+
+			$status = self::update_boolean_global_value('PS_DISABLE_NON_NATIVE_MODULE', false, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-non-native', false)) {
-			$status = PS_CLI_MODULES::disable_non_native_modules();
+			$successMsg = 'non native modules disabled';
+			$errMsg = 'non native modules could not be disabled';
+			$notChanged = 'non native modules were already disabled';
+
+			$status = self::update_boolean_global_value('PS_DISABLE_NON_NATIVE_MODULE', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('enable-check-update', false)) {
-			$status = PS_CLI_MODULES::enable_update_check();
+			$successMsg = 'modules auto updates check enabled';
+			$errMsg = 'modules auto updates could not be enabled';
+			$notChanged = 'modules auto updates checks were already enabled';
+
+			$status = self::update_boolean_global_value('PRESTASTORE_LIVE', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-check-update', false)) {
-			$status = PS_CLI_MODULES::disable_update_check();
+			$successMsg = 'modules auto updates check disabled';
+			$errMsg = 'modules auto updates could not be disabled';
+			$notChanged = 'modules auto updates checks were already disabled';
+
+			$status = self::update_boolean_global_value('PRESTASTORE_LIVE', false, $successMsg, $errMsg, $notChanged);
 		}
 		else {
 			self::_show_command_usage('modules');
@@ -690,10 +760,6 @@ class PS_CLI_UTILS {
 			exit(0);
 		}
 		elseif($theme = $arguments->getOpt('install', false)) {
-			if ($theme === "1") {
-				echo "You must specify a theme to install\n";
-				exit(1);
-			}
 
 			PS_CLI_THEMES::install_theme($theme);
 
@@ -727,8 +793,14 @@ class PS_CLI_UTILS {
 			PS_CLI_CMS::list_pages();
 			$status = true;
 		}
-		elseif($opt = $arguments->getOpt('delete-page')) {
+		elseif($opt = $arguments->getOpt('delete-page', false)) {
 			$status = PS_CLI_CMS::delete_page($opt);
+		}
+		elseif($pageId = $arguments->getOpt('disable-page', false)) {
+			$status = PS_CLI_CMS::disable_page($pageId);
+		}
+		elseif($pageId = $arguments->getOpt('enable-page', false)) {
+			$status = PS_CLI_CMS::enable_page($pageId);
 		}
 		else {
 			self::_show_command_usage('cms');
@@ -802,11 +874,14 @@ class PS_CLI_UTILS {
 	}
 
 	private static function _parse_multistore_arguments(Garden\Cli\Args $arguments) {
+
 		if($opt = $arguments->getOpt('list-shops', false)) {
 			PS_CLI_MULTISTORE::list_shops();
+			$status = true;
 		}
 		elseif($opt = $arguments->getOpt('list-groups', false)) {
 			PS_CLI_MULTISTORE::list_groups();
+			$status = true;
 		}
 		elseif($opt = $arguments->getOpt('enable-multistore', false)) {
 			PS_CLI_MULTISTORE::enable_multistore();
@@ -814,9 +889,24 @@ class PS_CLI_UTILS {
 		elseif($opt = $arguments->getOpt('disable-multistore', false)) {
 			PS_CLI_MULTISTORE::disable_multistore();
 		}
-		elseif($opt = $arguments->getOpt('create-shopgroup', false)) {
+		elseif($opt = $arguments->getOpt('create-group', false)) {
 
-			//todo: argument parsing
+			$active = $arguments->getOpt('active', false);
+
+			$shareCustomers = $arguments->getOpt('share-customers', false);
+			$shareStock = $arguments->getOpt('share-stock', false);
+			$shareOrders = $arguments->getOpt('share-orders', false);
+			if($name = $arguments->getOpt('name', false)) {
+				if($name == "1") {
+					echo "You must specify a name with --name option\n";
+					exit(1);
+				}
+			}
+			else {
+				echo "You must specify group name with --name option\n";
+				exit(1);
+			}
+
 			PS_CLI_MULTISTORE:: create_group($name, $shareCustomers, $shareStock, $shareOrders, $active = true); 
 		}
 		else {
@@ -824,7 +914,10 @@ class PS_CLI_UTILS {
 			exit(1);
 		}
 
-		exit(0);
+		if ($status) {
+			exit(0);
+		}
+		else exit(1);
 	}
 
 	private static function _parse_export_arguments(Garden\Cli\Args $arguments) {
@@ -880,6 +973,41 @@ class PS_CLI_UTILS {
 
 		$schema = self::$_cli->getSchema($command);
 		self::$_cli->writeHelp($schema);
+	}
+
+	public static function update_boolean_global_value($key, $status, $successMsg, $errMsg, $leftMsg) {
+		$curStatus = Configuration::getGlobalValue($key);
+
+		if (($status)&&($curStatus)) {
+			//echo "$friendlyName is already enabled\n";
+			echo "Success: $leftMsg\n";
+			return true;
+		}
+		elseif((!$status)&&(!$curStatus)) {
+			//echo "$friendlyName is already disabled\n";
+			echo "Success: $leftMsg\n";
+			return true;
+		}
+		else {
+			if(Configuration::updateGlobalValue($key, $status)) {
+				/*
+				if($status) {
+					echo "Successfully enabled $friendlyName\n";
+				}
+				else {
+					echo "Successfully disabled $friendlyName\n";
+				}
+				*/
+				echo "Success: $successMsg\n";
+
+				return true;
+			}
+			else {
+				//echo "Error, could not update $friendlyName configuration\n";
+				echo "Error: $errMsg\n";
+				return false;
+			}
+		}
 	}
 }
 

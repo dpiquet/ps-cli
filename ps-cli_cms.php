@@ -29,7 +29,6 @@ class PS_CLI_CMS {
 		$out->display();
 
 		return;
-
 	}
 
 	//returns an array
@@ -153,6 +152,69 @@ class PS_CLI_CMS {
 			return false;
 		}
 	}
+
+	public static function disable_page($pageId) {
+		$context = Context::getContext();
+
+		$page = new CMS($pageId, $context->language->id);
+
+		if(Validate::isLoadedObject($page)) {
+
+			$page->context = $context;
+
+			if($page->active) {
+				$page->active = false;
+				if($page->update()) {
+					echo "Successfully disabled page $page->name\n";
+					return true;
+				}
+				else {
+					echo "Error, could not disable page $page->name\n";
+					return false;
+				}
+			}
+			else {
+				echo "The page $page->name is already disabled\n";
+				return true;
+			}
+		}
+		else {
+			echo "Could not find a page with page id $pageId\n";
+			return false;
+		}
+	}
+
+	public static function enable_page($pageId) {
+		$context = Context::getContext();
+
+		$page = new CMS($pageId, $context->language->id);
+
+		if(Validate::isLoadedObject($page)) {
+
+			$page->context = $context;
+
+			if(!$page->active) {
+				$page->active = true;
+				if($page->update()) {
+					echo "Successfully enabled page $page->name\n";
+					return true;
+				}
+				else {
+					echo "Error, could not enable page $page->name\n";
+					return false;
+				}
+			}
+			else {
+				echo "The page $page->name is already enabled\n";
+				return true;
+			}
+		}
+		else {
+			echo "Could not find a page with page id $pageId\n";
+			return false;
+		}
+	}
+
 }
 
 ?>

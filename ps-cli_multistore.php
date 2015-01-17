@@ -99,16 +99,21 @@ class PS_CLI_MULTISTORE {
 	}
 
 	public static function create_group($name, $shareCustomers, $shareStock, $shareOrders, $active = true) {
-		if(!Validate::isBool($shareClient)) {
+		if(!Validate::isBool($shareCustomers)) {
 			return false;
 		}
-		if (!Validate::isBool($shareQtty)) {
+
+		if (!Validate::isBool($shareStock)) {
 			return false;
 		}
+
 		if(!Validate::isBool($shareOrders)) {
 			return false;
 		}
 
+		if(!Validate::isBool($active)) {
+			return false;
+		}
 
 		$shopGroup = new ShopGroup();
 

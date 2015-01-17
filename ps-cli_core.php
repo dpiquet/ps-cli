@@ -110,6 +110,7 @@ class PS_CLI_CORE {
 		}
 	}
 
+/*
 	public static function disable_automatic_module_update_checks() {
 		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
 
@@ -137,17 +138,84 @@ class PS_CLI_CORE {
 			return true;
 		}
 	}
+*/
 
 	public static function print_cache_status() {
 
-		if ( _PS_CACHE_ENABLED_ ) {
-			echo "Cache "._PS_CACHING_SYSTEM_." is active\n";
-			return;
+		$table = new Cli\Table();
+		$table->setHeaders(Array(
+			'Configuration',
+			'Value'
+			)
+		);
+
+		$templateCache = Configuration::getGlobalValue('PS_SMARTY_CACHE');
+		$line = Array('Smarty Template cache');
+
+		if($templateCache) {
+			array_push($line, 'enabled');
 		}
 		else {
-			echo "Cache is disabled\n";
-			return;
+			array_push($line, 'disabled');
 		}
+
+		$table->addRow($line);
+
+		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
+
+		$line = Array('Smarty Template Compilation');
+		switch($currentConfig) {
+			case _PS_SMARTY_NO_COMPILE_:
+				array_push($line, 'never');
+				break;
+			case _PS_SMARTY_CHECK_COMPILE_:
+				array_push($line, 'if updated');
+				break;
+			case _PS_SMARTY_FORCE_COMPILE_:
+				array_push($line, 'Always');
+				break;
+		}
+
+		$table->addRow($line);
+
+		$currentConfig = Configuration::getGlobalValue('PS_CSS_THEME_CACHE');
+
+		$line = Array('CSS cache');
+		if($currentConfig) {
+			array_push($line, 'Enabled');
+		}
+		else {
+			array_push($line, 'Disabled');
+		}
+
+		$table->addRow($line);
+
+		$line = Array('JS cache');
+		$currentConfig = Configuration::getGlobalValue('PS_JS_THEME_CACHE');
+		if($currentConfig) {
+			array_push($line, 'Enabled');
+		}
+		else {
+			array_push($line, 'Disabled');
+		}
+
+		$table->addRow($line);
+
+
+		$line = Array('Cache');
+
+		if ( _PS_CACHE_ENABLED_ ) {
+			array_push($line, 'enabled');
+		}
+		else {
+			array_push($line, 'disabled');
+		}
+
+		$table->addRow($line);
+
+		$table->display();
+
+		return;
 	}
 
 	public static function disable_cache() {
@@ -276,6 +344,73 @@ class PS_CLI_CORE {
 			return false;
 		}
 
+	}
+
+	public static function smarty_template_compilation($compil) {
+
+		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
+
+		switch($compil) {
+			case 'never':
+				if($currentConfig == _PS_SMARTY_NO_COMPILE_) {
+					echo "Already set up\n";
+					return true;
+				}
+				else {
+					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_NO_COMPILE_)) {
+						echo "Successfully updated\n";
+						return true;
+					}
+					else {
+						echo "Error, could not update configuration\n";
+						return false;
+					}
+				}
+
+				break;
+
+			case 'updated':
+
+				if($currentConfig == _PS_SMARTY_CHECK_COMPILE_) {
+					echo "Already set up\n";
+					return true;
+				}
+				else {
+					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_CHECK_COMPILE_)) {
+						echo "Successfully updated\n";
+						return true;
+					}
+					else {
+						echo "Error, could not update configuration\n";
+						return false;
+					}
+				}
+
+				break;
+
+			case 'allways':
+
+				if($currentConfig == _PS_SMARTY_FORCE_COMPILE_) {
+					echo "Already set up\n";
+					return true;
+				}
+				else {
+					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_FORCE_COMPILE_)) {
+						echo "Successfully updated\n";
+						return true;
+					}
+					else {
+						echo "Error, could not update configuration\n";
+						return false;
+					}
+				}
+
+				break;
+
+			default:
+				echo "parameter error\n";
+				return false;
+		}
 	}
 
 	// we should not load core before loading this

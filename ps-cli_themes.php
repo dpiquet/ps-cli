@@ -42,8 +42,17 @@ class PS_CLI_THEMES {
 			return false;
 		}
 
+
 		//from Prestashop's AdminThemeController.php
 		$theme = new Theme($themeId);
+
+		$context = Context::getContext();
+		if($context->shop->id_theme == $themeId) {
+			echo "$theme->name is already the active theme\n";
+			return true;
+		}
+
+
 		$xml = false;
 
 		if (file_exists(_PS_ROOT_DIR_.'/config/xml/themes/'.$theme->directory.'.xml'))
@@ -180,6 +189,7 @@ class PS_CLI_THEMES {
 
 		PS_CLI_CORE::clear_smarty_cache();
 
+		echo "Successfully installed theme $theme->name\n";
 		return true;
 	}
 

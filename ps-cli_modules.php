@@ -298,86 +298,6 @@ class PS_CLI_MODULES {
 		return true;
 	}
 
-	//TODO: tests
-	public static function disable_non_native_modules() {
-		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
-
-		if ($currentStatus == 0) {
-			if (Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 1)) {
-				echo "Non native modules successfully disabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not disable non native modules\n";
-				return false;
-			}
-		}
-		else {
-			echo "Non native modules already disabled\n";
-			return true;
-		}
-	}
-
-	// TODO: tests
-	public static function enable_non_native_modules() {
-		$currentStatus = (int)Configuration::get('PS_DISABLE_NON_NATIVE_MODULE');
-
-		if ($currentStatus == 1) {
-			if (Configuration::updateGlobalValue('PS_DISABLE_NON_NATIVE_MODULE', 0)) {
-				echo "Non native modules successfully enabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not enable non native modules\n";
-				return false;
-			}
-		}
-		else {
-			echo "Non native modules already enabled\n";
-			return true;
-		}
-	}
-
-	//TODO: tests
-	public static function disable_overrides() {
-		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
-
-		if ($currentStatus == 0) {
-			if (Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 1)) {
-				echo "Overrides successfully disabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not disable overrides\n";
-				return false;
-			}
-		}
-		else {
-			echo "Overrides already disabled\n";
-			return true;
-		}
-	}
-
-	// TODO: tests
-	public static function enable_overrides() {
-		$currentStatus = (int)Configuration::get('PS_DISABLE_OVERRIDES');
-
-		if ($currentStatus == 1) {
-			if (Configuration::updateGlobalValue('PS_DISABLE_OVERRIDES', 0)) {
-				echo "Overrides successfully enabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not enable overrides\n";
-				return false;
-			}
-		}
-		else {
-			echo "Overrides already enabled\n";
-			return true;
-		}
-	}
-
 	// Todo: support for bought modules (prestashop login, etc...)
 	public static function upgrade_all_modules() {	
 
@@ -533,6 +453,7 @@ class PS_CLI_MODULES {
 		}
 	}
 
+/*
 	public static function disable_update_check() {
 		$currentStatus = (int)Configuration::getGlobalValue('PRESTASTORE_LIVE');
 
@@ -571,6 +492,7 @@ class PS_CLI_MODULES {
 		}
 
 	}
+*/
 }
 
 ?>
