@@ -80,6 +80,9 @@ require_once('ps-cli_images.php');
 require_once('ps-cli_url.php');
 require_once('ps-cli_multistore.php');
 require_once('ps-cli_import.php');
+require_once('ps-cli_ccc.php');
+require_once('ps-cli_preferences.php');
+require_once('ps-cli_order_preferences.php');
 
 // init context, etc...
 PS_CLI_UTILS::ps_cli_initialize();

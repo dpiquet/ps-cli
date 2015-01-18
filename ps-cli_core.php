@@ -79,67 +79,6 @@ class PS_CLI_CORE {
 		return true;	
 	}
 
-	public static function disable_shop() {
-		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
-
-		if ($currentStatus == 1) {
-			Configuration::updateValue('PS_SHOP_ENABLE', 0);
-
-			echo "Shop disabled\n";
-			return true;
-		}
-		else {
-			echo "Shop is already disabled\n";
-			return true;
-		}
-
-	}
-
-	public static function enable_shop() {
-		$currentStatus = (int)Configuration::get('PS_SHOP_ENABLE');
-
-		if ($currentStatus == 0) {
-			Configuration::updateValue('PS_SHOP_ENABLE', 1);
-
-			echo "Shop enabled\n";
-			return true;
-		}
-		else {
-			echo "Shop is already enabled\n";
-			return true;
-		}
-	}
-
-/*
-	public static function disable_automatic_module_update_checks() {
-		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
-
-		if ($currentStatus == 1) {
-			Configuration::updateValue('PRESTASTORE_LIVE', 0);
-			echo "Automatic module updates checks disabled\n";
-			return true;
-		}
-		else {
-			echo "Automatic module updates check already disabled\n";
-			return true;
-		}
-	}
-
-	public static function enable_automatic_module_update_checks() {
-		$currentStatus = (int)Configuration::get('PRESTASTORE_LIVE');
-
-		if ($currentStatus == 0) {
-			Configuration::updateValue('PRESTASTORE_LIVE', 1);
-			echo "Automatic module updates checks enabled\n";
-			return true;
-		}
-		else {
-			echo "Automatic module updates check already enabled\n";
-			return true;
-		}
-	}
-*/
-
 	public static function print_cache_status() {
 
 		$table = new Cli\Table();
@@ -149,17 +88,7 @@ class PS_CLI_CORE {
 			)
 		);
 
-		$templateCache = Configuration::getGlobalValue('PS_SMARTY_CACHE');
-		$line = Array('Smarty Template cache');
-
-		if($templateCache) {
-			array_push($line, 'enabled');
-		}
-		else {
-			array_push($line, 'disabled');
-		}
-
-		$table->addRow($line);
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_SMARTY_CACHE', 'Smarty Template Cache');
 
 		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
 
@@ -178,29 +107,21 @@ class PS_CLI_CORE {
 
 		$table->addRow($line);
 
-		$currentConfig = Configuration::getGlobalValue('PS_CSS_THEME_CACHE');
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_CSS_THEME_CACHE', 'Css cache');
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_JS_THEME_CACHE', 'JS cache'); 
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_CACHE_CONTROL', 'Htaccess cache control');
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_MEDIA_SERVERS', 'Use Media Servers');
 
-		$line = Array('CSS cache');
-		if($currentConfig) {
-			array_push($line, 'Enabled');
+		$line = Array('Cipher');
+
+		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM')) {
+			array_push($line, 'RIJNDAEL/Mcrypt');
 		}
 		else {
-			array_push($line, 'Disabled');
+			array_push($line, 'Local Blowfish');
 		}
 
 		$table->addRow($line);
-
-		$line = Array('JS cache');
-		$currentConfig = Configuration::getGlobalValue('PS_JS_THEME_CACHE');
-		if($currentConfig) {
-			array_push($line, 'Enabled');
-		}
-		else {
-			array_push($line, 'Disabled');
-		}
-
-		$table->addRow($line);
-
 
 		$line = Array('Cache');
 
