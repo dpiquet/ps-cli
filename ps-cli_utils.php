@@ -206,6 +206,12 @@ class PS_CLI_UTILS {
 				->opt('disable-delayed-shipping', 'Disable shipping delay', false)
 				->opt('enable-conditions', 'Require customers to accept terms of service')
 				->opt('disable-conditions', 'Do not require customers to accept terms of service')
+				->opt('enable-gift-wrapping', 'enable gift wrapping offer', false)
+				->opt('disable-gift-wrapping', 'disable gift wrapping offer', false)
+				->opt('gift-wrapping-price', 'disable gift wrapping offer', false, 'integer')
+				->opt('enable-recycle-pack', 'Suggest recycled packaging', false)
+				->opt('disable-recycle-pack', 'Turn off recycle packaging suggestion', false)
+				->opt('minimum-checkout', 'Set minimum checkout (0 to disable)', false)
 
 			->command('*')
 				->opt(
@@ -1295,6 +1301,68 @@ class PS_CLI_UTILS {
 			$notChanged = 'Terms of service were already disabled';
 
 			$status = self::update_global_value('PS_CONDITIONS', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('enable-recycle-pack', false)) {
+			$successMsg = 'Recycled packaging suggestion enabled';
+			$errMsg = 'Could not enable recycled packaging suggestion';
+			$notChanged = 'recycled packagin suggestion already enabled';
+
+			$status = self::update_global_value('PS_RECYCLE_PACK', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-recycle-pack', false)) {
+			$successMsg = 'Recycled packaging suggestion disabled';
+			$errMsg = 'Could not disable recycled packaging suggestion';
+			$notChanged = 'recycled packagin suggestion already disabled';
+
+			$status = self::update_global_value('PS_RECYCLE_PACK', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('enable-gift-wrapping', false)) {
+			$successMsg = 'Enabled gift wrapping offer';
+			$errMsg = 'Could not enable gift wrapping offer';
+			$notChanged = 'Gift wrapping is already enabled';
+
+			$status = self::update_global_value('PS_GIFT_WRAPPING', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-gift-wrapping', false)) {
+			$successMsg = 'Disabled gift wrapping offer';
+			$errMsg = 'Could not disable gift wrapping offer';
+			$notChanged = 'Gift wrapping is already disabled';
+
+			$status = self::update_global_value('PS_GIFT_WRAPPING', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($price = $arguments->getOpt('gift-wrapping-price', false)) {
+			$successMsg = "gift wrapping price set to $price";
+			$errMsg = 'Could not update gift wrapping price';
+			$notChanged = "Gift wrapping price was already $price";
+
+			if(!Validate::isInt($price)) {
+				echo "Price must be a positive integer ! $price is not an acceptable value\n";
+				exit(1);
+			}
+
+			if($price <= 0) {
+				echo "Price must be a positive value";
+				exit(1);
+			}
+
+			$status = self::update_global_value('PS_GIFT_WRAPPING_PRICE', $price, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($price = $arguments->getOpt('minimum-checkout', false)) {
+			if(!Validate::isInt($price)) {
+				echo "Error, price must be an integer, $price is not a valid value\n";
+				exit(1);
+			}
+
+			if($price < 0) {
+				echo "Error, price must be superior or equal to 0\n";
+				exit(1);
+			}
+
+			$successMsg = "Minimum checkout successfully set to $price";
+			$errMsg = 'Could not update minimum checkout value';
+			$notChanged = "Minimum checkout is already $price";
+
+			$status = self::update_global_value('PS_PURCHASE_MINIMUM', $price, $successMsg, $errMsg, $notChanged);
 		}
 		else {
 			self::_show_command_usage('order-preferences');
