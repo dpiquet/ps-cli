@@ -303,6 +303,24 @@ class PS_CLI_EMPLOYEE {
 		return $superadminID;
 	}
 
+	public static function print_employee_options() {
+		$table = new Cli\Table();
+
+		$table->setHeaders(Array(
+			'Key',
+			'Configuration',
+			'Value'
+			)
+		);
+
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PASSWD_TIME_BACK', 'Minimum delay for password regeneration');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 'Memorize last used language in forms');
+
+		$table->display();
+
+		return;
+	}
+
 }
 
 ?>

@@ -11,6 +11,9 @@ class PS_CLI_UTILS {
 
 	private static $_cli = false;
 
+	//callback array
+	public static $callbacks = Array();
+
 	public static function ps_cli_initialize() {
 		self::$LANG = Configuration::get('PS_LANG_DEFAULT');
 
@@ -56,12 +59,7 @@ class PS_CLI_UTILS {
 				->opt('uninstall', 'Uninstall module', false)
 				->opt('upgrade', 'Upgrade modules from PrestaShop addons', false)
 				->opt('upgrade-db', 'Run modules database upgrades', false)
-				->opt('enable-overrides', 'Enable modules overrides', false)
-				->opt('disable-overrides', 'Disable modules overrides', false)
-				->opt('enable-non-native', 'Enable non native modules', false)
-				->opt('disable-non-native', 'Disable non native modules', false)
-				->opt('enable-check-update', 'Enable auto check for updates', false)
-				->opt('disable-check-update', 'Disable auto check for updates', false)
+				->opt('show-status', 'Show module configuration', false)
 				->arg('<modulename>', 'The module to activate', true)
 
 			->command('core')
@@ -72,15 +70,15 @@ class PS_CLI_UTILS {
 			->command('cache')
 				->description('Manage PrestaShop cache')	
 				->opt('clear-cache', 'Clear smarty cache', false)
-				->opt('cache-status', 'show cache in use', false, 'string')
+				->opt('show-status', 'show cache configuration', false, 'string')
 				->opt('disable-cache', 'Disable PrestaShop cache', false)
 				->opt('enable-cache', 'Enable PrestaShop cache', false)
-				->opt('enable-css-cache', 'Enable CSS cache', false)
-				->opt('disable-css-cache', 'Disable CSS cache', false)
-				->opt('enable-js-cache', 'Enable JS cache', false)
-				->opt('disable-js-cache', 'Disable JS cache', false)
+//				->opt('enable-css-cache', 'Enable CSS cache', false)
+//				->opt('disable-css-cache', 'Disable CSS cache', false)
+//				->opt('enable-js-cache', 'Enable JS cache', false)
+//				->opt('disable-js-cache', 'Disable JS cache', false)
 				->opt('cache-depth', 'Set cache depth (default 1)', false, 'integer')
-				->opt('recompile-smarty', 'Set smarty compilation (allway, never, modified)', false, 'string')
+				->opt('recompile-smarty', 'Set smarty compilation (allways, never, modified)', false, 'string')
 //				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
 
 			->command('employee')
@@ -95,6 +93,7 @@ class PS_CLI_UTILS {
 				->opt('profile', 'Employee profile', false, 'string')
 				->opt('first-name', 'Employee first name', false, 'string')
 				->opt('last-name', 'Employee last name', false, 'string')
+				->opt('show-status', 'Show employee configuration', false)
 
 			->command('profile')
 				->description('Manage PrestaShop profiles')
@@ -162,56 +161,35 @@ class PS_CLI_UTILS {
 
 			->command('ccc')
 				->description('Configuration CCC (Concatenation, Compression and Cache)')
-				->opt('enable-html-minifier', 'Enable the HTML code reduction')
-				->opt('disable-html-minifier', 'Disable the HTML code reduction')
-				->opt('enable-js-minifier', 'Enable JavaScript code reduction')
-				->opt('disable-js-minifier', 'Disable JavaScript code reduction')
-				->opt('enable-js-lazyload', 'Move JS code to the end of HTML pages')
-				->opt('disable-js-lazyload', 'Do not move JS code to the end of HTML pages')
-				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)')
+//				->opt('enable-html-minifier', 'Enable the HTML code reduction', false)
+//				->opt('disable-html-minifier', 'Disable the HTML code reduction', false)
+//				->opt('enable-js-minifier', 'Enable JavaScript code reduction', false)
+//				->opt('disable-js-minifier', 'Disable JavaScript code reduction', false)
+//				->opt('enable-js-lazyload', 'Move JS code to the end of HTML pages', false)
+//				->opt('disable-js-lazyload', 'Do not move JS code to the end of HTML pages', false)
+				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)', false)
+				->opt('show-status', 'Show CCC configuration', false)
 
 			->command('preferences')
 				->description('Set up PrestaShop preferences')
-				->opt('enable-fo-tokens', 'Enable front office security tokens', false)
-				->opt('disable-fo-tokens', 'Disable front office security tokens', false)
-				->opt('enable-iframes', 'Enable HTML iframes', false)
-				->opt('disable-iframes', 'Disable HTML iframes', false)
-				->opt('enable-html-purifier', 'Enable HTML Purifier library', false)
-				->opt('disable-html-purifier', 'Disable HTML Purifier library', false)
-				->opt('show-status', 'Show Preferences status', false)
-				->opt('enable-ssl', 'Enabled SSL everywhere', false)
-				->opt('disable-ssl', 'Disabled SSL everywhere', false)
-				->opt('display-supplier', 'Display suppliers and manufacturers on the front office', false)
-				->opt('hide-supplier', 'Hide suppliers and manufacturers on the front office', false)
-				->opt('display-bestsellers', 'Display best sellers', false)
-				->opt('hide-bestsellers', 'Hide best sellers', false)
-				->opt('round-mode', 'Set how to round prices(up, down, classic)', false)
-				->opt('check-cookie-ip', 'Check the cookie\'s IP address', false)
-				->opt('no-check-cookie-ip', 'Do not check cookie\'s IP address', false)
-				->opt('bo-cookie-lifetime', 'Set backoffice cookie lifetime', false, 'integer')
-				->opt('fo-cookie-lifetime', 'Set frontoffice cookie lifetime', false, 'integer')
-				->opt('max-file-upload-size', 'Set the uplaod max file size', false)
-				->opt('max-image-upload-size', 'Set the upload max image size', false)
-				->opt('max-attachment-size', 'Set the attachment maximum size', false)
+				->opt('show-status', 'Show preferences configuration')
 
 			->command('order-preferences')
+				->description('PrestaShop orders preferences')
 				->opt('show-status', 'Show current order configuration', false)
-				->opt('enable-guest-orders', 'Enable guests to place orders', false)
-				->opt('disable-guest-orders', 'Disable guests to place orders', false)
-				->opt('enable-1click', 'Enable 1 click reordering', false)
-				->opt('disable-1click', 'Disable 1 click reordering', false)
-				->opt('enable-multishipping', 'Enable shipping to multiple addresses', false)
-				->opt('disable-multishipping', 'Disable shipping to multiple addresses', false)
-				->opt('enable-delayed-shipping', 'Enable shipping delay', false)
-				->opt('disable-delayed-shipping', 'Disable shipping delay', false)
-				->opt('enable-conditions', 'Require customers to accept terms of service')
-				->opt('disable-conditions', 'Do not require customers to accept terms of service')
-				->opt('enable-gift-wrapping', 'enable gift wrapping offer', false)
-				->opt('disable-gift-wrapping', 'disable gift wrapping offer', false)
-				->opt('gift-wrapping-price', 'disable gift wrapping offer', false, 'integer')
-				->opt('enable-recycle-pack', 'Suggest recycled packaging', false)
-				->opt('disable-recycle-pack', 'Turn off recycle packaging suggestion', false)
-				->opt('minimum-checkout', 'Set minimum checkout (0 to disable)', false)
+
+			->command('product-preferences')
+				->description('PrestaShop products preferences')
+				->opt('show-status', 'Show current products preferences', false)
+
+			->command('customer-preferences')
+				->description('PrestaShop customers preferences')
+				->opt('show-status', 'Show current customer preferences', false)
+
+			->command('option')
+				->opt('action', 'action: get or update', true, 'string')
+				->opt('option', 'Option name', true, 'string')
+				->opt('value', 'Option value', false, 'string')
 
 			->command('*')
 				->opt(
@@ -233,7 +211,7 @@ class PS_CLI_UTILS {
 				)
 				->opt(
 					'lang',
-					'Set the language to use',
+					'Set PrestaShop context language to use',
 					false
 				)
 				->opt(
@@ -376,6 +354,18 @@ class PS_CLI_UTILS {
 				self::_parse_order_preferences_arguments($args);
 				break;
 
+			case 'product-preferences':
+				self::_parse_product_preferences_arguments($args);
+				break;
+
+			case 'customer-preferences':
+				self::_parse_customer_preferences_arguments($args);
+				break;
+
+			case 'option':
+				self::_parse_option_arguments($args);
+				break;
+
 			default:
 				echo "Not implemented\n";
 				break;
@@ -388,7 +378,7 @@ class PS_CLI_UTILS {
 	private static function _parse_cache_arguments(Garden\Cli\Args $arguments) {
 		$status = true;
 
-		if ($opt = $arguments->getOpt('cache-status', false)) {
+		if ($opt = $arguments->getOpt('show-status', false)) {
 			PS_CLI_CORE::print_cache_status();
 		}
 		elseif ($opt = $arguments->getOpt('disable-cache', false)) {
@@ -437,34 +427,6 @@ class PS_CLI_UTILS {
 		}
 		elseif($smarty = $arguments->getOpt('recompile-smarty', false)) {
 			$status = PS_CLI_CORE::smarty_template_compilation($smarty);
-		}
-		elseif($arguments->getOpt('enable-css-cache', false)) {
-			$successMsg = 'css cache enabled';
-			$errMsg = 'css cache could not be enabled';
-			$notChanged = 'css cache was already enabled';
-
-			$status = self::update_global_value('PS_CSS_THEME_CACHE', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-css-cache', false)) {
-			$successMsg = 'css cache disabled';
-			$errMsg = 'css cache could not be disabled';
-			$notChanged = 'css cache was already disabled';
-
-			$status = self::update_global_value('PS_CSS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-js-cache', false)) {
-			$successMsg = 'js cache enabled';
-			$errMsg = 'js cache could not be enabled';
-			$notChanged = 'js cache was already enabled';
-
-			$status = self::update_global_value('PS_JS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-js-cache', false)) {
-			$successMsg = 'js cache disabled';
-			$errMsg = 'js cache could not be disabled';
-			$notChanged = 'js cache was already disabled';
-
-			$status = self::update_global_value('PS_JS_THEME_CACHE', false, $successMsg, $errMsg, $notChanged);
 		}
 		else {
 			self::_show_command_usage('cache');
@@ -538,6 +500,10 @@ class PS_CLI_UTILS {
 		elseif ($opt = $arguments->getOpt('list', false)) {
 			$status = PS_CLI_MODULES::print_module_list();
 		}
+		elseif($arguments->getOpt('show-status', false)) {
+			PS_CLI_MODULES::print_module_status();
+			$status = true;
+		}
 		elseif ($opt = $arguments->getOpt('upgrade', false)) {
 			$status = PS_CLI_MODULES::upgrade_all_modules();
 		}
@@ -607,10 +573,13 @@ class PS_CLI_UTILS {
 
 		$status = null;
 
-		if ($opt = $arguments->getOpt('list', false)) {
+		if ($arguments->getOpt('list', false)) {
 			$status = PS_CLI_EMPLOYEE::list_employees();
 		}
-
+		elseif($arguments->getOpt('show-status', false)) {
+			PS_CLI_EMPLOYEE::print_employee_options();
+			$status = true;
+		}
 		elseif ($opt = $arguments->getOpt('delete', false)) {
 			if ($opt === "1") {
 				self::_show_command_usage('employee');
@@ -1084,134 +1053,9 @@ class PS_CLI_UTILS {
 
 	public static function _parse_preferences_arguments(Garden\Cli\Args $arguments) {
 
-		if($arguments->getOpt('enable-fo-tokens', false)) {
-			$successMsg = 'Successfully enabled front office security tokens';
-			$errMsg = 'Could not enable front office security tokens';
-			$notChanged = 'Front office security tokens were already enabled';
-
-			$status = self::update_global_value('PS_TOKEN_ENABLE', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-fo-tokens', false)) {
-			$successMsg = 'Successfully disabled front office security tokens';
-			$errMsg = 'Could not disable front office security tokens';
-			$notChanged = 'Front office security tokens were already disabled';
-
-			$status = self::update_global_value('PS_TOKEN_ENABLE', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-iframes', false)) {
-			$successMsg = 'Successfully enabled HTML iframes';
-			$errMsg = 'Could not enable HTML iframes';
-			$notChanged = 'HTML iframes are already enabled';
-
-			$status = self::update_global_value('PS_ALLOW_HTML_IFRAME', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-iframes', false)) {
-			$successMsg = 'Successfully disabled HTML iframes';
-			$errMsg = 'Could not disable HTML iframes';
-			$notChanged = 'HTML iframes are already disabled';
-
-			$status = self::update_global_value('PS_ALLOW_HTML_IFRAME', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-html-purifier', false)) {
-			$successMsg = 'Successfully enabled HTML purifier library';
-			$errMsg = 'Could not enable HTML purifier library';
-			$notChanged = 'HTML purifier is already enabled';
-
-			$status = self::update_global_value('PS_USE_HTMLPURIFIER', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-html-purifier', false)) {
-			$successMsg = 'Successfully disabled HTML purifier library';
-			$errMsg = 'Could not disable HTML purifier library';
-			$notChanged = 'HTML purifier library is already disabled';
-
-			$status = self::update_global_value('PS_USE_HTMLPURIFIER', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('show-status', false)) {
+		if($arguments->getOpt('show-status', false)) {
 			PS_CLI_PREFERENCES::show_preferences_status();
 			$status = true;
-		}
-
-		elseif($arguments->getOpt('display-supplier', false)) {
-			$successMsg = 'supplier front office page enabled';
-			$errMsg = 'could not enable front office supplier page';
-			$notChanged = 'Supplier front page is already enabled';
-
-			$status = self::update_global_value('PS_DISPLAY_SUPPLIERS', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('hide-supplier', false)) {
-			$successMsg = 'supplier front office page disabled';
-			$errMsg = 'could not disable front office supplier page';
-			$notChanged = 'Supplier front page is already disabled';
-
-			$status = self::update_global_value('PS_DISPLAY_SUPPLIERS', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('display-bestsellers', false)) {
-			$successMsg = 'best sellers front office page enabled';
-			$errMsg = 'could not enable front office best seller page';
-			$notChanged = 'best sellers front page is already enabled';
-
-			$status = self::update_global_value('PS_DISPLAY_BEST_SELLERS', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('hide-bestsellers', false)) {
-			$successMsg = 'best sellers front office page disabled';
-			$errMsg = 'could not disable front office best sellers page';
-			$notChanged = 'best sellers front page is already disabled';
-
-			$status = self::update_global_value('PS_DISPLAY_BEST_SELLERS', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-ssl', false)) {
-			$successMsg = 'SSL forced on all pages';
-			$errMsg = 'could not force SSL on all pages';
-			$notChanged = 'SSL is already forced on all pages';
-
-			$status = self::update_global_value('PS_SSL_ENABLED', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-ssl', false)) {
-			$successMsg = 'SSL force disabled';
-			$errMsg = 'could not disable the SSL force';
-			$notChanged = 'SSL force is already disabled';
-
-			$status = self::update_global_value('PS_SSL_ENABLED', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('check-cookie-ip', false)) {
-			$successMsg = 'cookie ip verification enabled';
-			$errMsg = 'Could not enable cookie IP verification';
-			$notChanged = 'Cookie IP verification is already enabled';
-
-			$status = self::update_global_value('PS_COOKIE_CHECKIP', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('no-check-cookie-ip', false)) {
-			$successMsg = 'cookie ip verification disabled';
-			$errMsg = 'Could not disable cookie IP verification';
-			$notChanged = 'Cookie IP verification is already disabled';
-
-			$status = self::update_global_value('PS_COOKIE_CHECKIP', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($roundMode = $arguments->getOpt('round-mode', false)) {
-			$status = PS_CLI_PREFERENCES::set_round_mode($roundMode);
-		}
-		elseif($lifetime = $arguments->getOpt('bo-cookie-lifetime', false)) {
-			$successMsg = "Successfully set timeout to $lifetime";
-			$errMsg = 'Could not update backoffice cookie lifetime';
-			$notChanged = "Backoffice cookie lifetime is already $lifetime";
-
-			$status = self::update_global_value('PS_COOKIE_LIFETIME_BO', $lifetime, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($lifetime = $arguments->getOpt('fo-cookie-lifetime', false)) {
-			$successMsg = "Successfully set lifetime to $lifetime";
-			$errMsg = 'Could not update frontoffice cookie lifetime';
-			$notChanged = "Frontoffice cookie lifetime is already $lifetime";
-
-			$status = self::update_global_value('PS_COOKIE_LIFETIME_FO', $lifetime, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($maxSize = $arguments->getOpt('max-file-upload-size', false)) {
-			$status = PS_CLI_PREFERENCES::set_max_file_size($maxSize);
-		}
-		elseif($maxSize = $arguments->getOpt('max-image-upload-size', false)) {
-			$status = PS_CLI_PREFERENCES::set_max_image_size($maxSize);
-		}
-		elseif($maxSize = $arguments->getOpt('max-attachment-size', false)) {
-			$status = PS_CLI_PREFERENCES::set_max_attachment_size($maxSize);
 		}
 		else {
 			self::_show_command_usage('preferences');
@@ -1232,138 +1076,6 @@ class PS_CLI_UTILS {
 			PS_CLI_ORDER_PREFERENCES::print_order_preferences();
 			$status = true;
 		}
-		elseif($arguments->getOpt('enable-guest-order', false)) {
-			$successMsg = 'Guest orders enabled';
-			$errMsg = 'Could not enable guest orders';
-			$notChanged = 'Guest orders were already enabled';
-
-			$status = self::update_global_value('PS_GUEST_CHECKOUT_ENABLED', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-guest-order', false)) {
-			$successMsg = 'Guest orders disabled';
-			$errMsg = 'Could not disable guest orders';
-			$notChanged = 'Guest orders were already disabled';
-
-			$status = self::update_global_value('PS_GUEST_CHECKOUT_ENABLED', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-1click', false)) {
-			$successMsg = 'one click checkout enabled';
-			$errMsg = 'Could not enable one click checkout';
-			$notChanged = 'One click checkout is already enabled';
-
-			$status = self::update_global_value('PS_DISALLOW_HISTORY_REORDERING', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-1click', false)) {
-			$successMsg = 'one click checkout disabled';
-			$errMsg = 'Could not disable one click checkout';
-			$notChanged = 'One click checkout is already disabled';
-
-			$status = self::update_global_value('PS_DISALLOW_HISTORY_REORDERING', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-multishipping', false)) {
-			$successMsg = 'Shipping to multiple addresses enabled';
-			$errMsg = 'Could not enable shipping to multiple addresses';
-			$notChanged = 'Shipping to multiple addresses already enabled';
-
-			$status = self::update_global_value('PS_ALLOW_MULTISHIPPING', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-multishipping', false)) {
-			$successMsg = 'Shipping to multiple addresses disabled';
-			$errMsg = 'Could not disable shipping to multiple addresses';
-			$notChanged = 'Shipping to multiple addresses already disabled';
-
-			$status = self::update_global_value('PS_ALLOW_MULTISHIPPING', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-delayed-shipping', false)) {
-			$successMsg = 'Enabled delay shipping';
-			$errMsg = 'Disable delay shipping';
-			$notChanged = 'Shipping delay is already enabled';
-	
-			$status = self::update_global_value('PS_SHIP_WHEN_AVAILABLE', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-delayed-shipping', false)) {
-			$successMsg = 'disabled delay shipping';
-			$errMsg = 'Disable delay shipping';
-			$notChanged = 'Shipping delay is already disabled';
-	
-			$status = self::update_global_value('PS_SHIP_WHEN_AVAILABLE', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-conditions', false)) {
-			$successMsg = 'Term of service enabled';
-			$errMsg = 'Term of service could not be enabled';
-			$notChanged = 'Terms of service were already enabled';
-
-			$status = self::update_global_value('PS_CONDITIONS', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-conditions', false)) {
-			$successMsg = 'Term of service disabled';
-			$errMsg = 'Term of service could not be disabled';
-			$notChanged = 'Terms of service were already disabled';
-
-			$status = self::update_global_value('PS_CONDITIONS', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-recycle-pack', false)) {
-			$successMsg = 'Recycled packaging suggestion enabled';
-			$errMsg = 'Could not enable recycled packaging suggestion';
-			$notChanged = 'recycled packagin suggestion already enabled';
-
-			$status = self::update_global_value('PS_RECYCLE_PACK', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-recycle-pack', false)) {
-			$successMsg = 'Recycled packaging suggestion disabled';
-			$errMsg = 'Could not disable recycled packaging suggestion';
-			$notChanged = 'recycled packagin suggestion already disabled';
-
-			$status = self::update_global_value('PS_RECYCLE_PACK', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('enable-gift-wrapping', false)) {
-			$successMsg = 'Enabled gift wrapping offer';
-			$errMsg = 'Could not enable gift wrapping offer';
-			$notChanged = 'Gift wrapping is already enabled';
-
-			$status = self::update_global_value('PS_GIFT_WRAPPING', true, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($arguments->getOpt('disable-gift-wrapping', false)) {
-			$successMsg = 'Disabled gift wrapping offer';
-			$errMsg = 'Could not disable gift wrapping offer';
-			$notChanged = 'Gift wrapping is already disabled';
-
-			$status = self::update_global_value('PS_GIFT_WRAPPING', false, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($price = $arguments->getOpt('gift-wrapping-price', false)) {
-			$successMsg = "gift wrapping price set to $price";
-			$errMsg = 'Could not update gift wrapping price';
-			$notChanged = "Gift wrapping price was already $price";
-
-			if(!Validate::isInt($price)) {
-				echo "Price must be a positive integer ! $price is not an acceptable value\n";
-				exit(1);
-			}
-
-			if($price <= 0) {
-				echo "Price must be a positive value";
-				exit(1);
-			}
-
-			$status = self::update_global_value('PS_GIFT_WRAPPING_PRICE', $price, $successMsg, $errMsg, $notChanged);
-		}
-		elseif($price = $arguments->getOpt('minimum-checkout', false)) {
-			if(!Validate::isInt($price)) {
-				echo "Error, price must be an integer, $price is not a valid value\n";
-				exit(1);
-			}
-
-			if($price < 0) {
-				echo "Error, price must be superior or equal to 0\n";
-				exit(1);
-			}
-
-			$successMsg = "Minimum checkout successfully set to $price";
-			$errMsg = 'Could not update minimum checkout value';
-			$notChanged = "Minimum checkout is already $price";
-
-			$status = self::update_global_value('PS_PURCHASE_MINIMUM', $price, $successMsg, $errMsg, $notChanged);
-		}
 		else {
 			self::_show_command_usage('order-preferences');
 			exit(1);
@@ -1375,6 +1087,95 @@ class PS_CLI_UTILS {
 		else {
 			exit(1);
 		}
+	}
+
+	private static function _parse_product_preferences_arguments(Garden\Cli\Args $arguments) {
+		if($arguments->getOpt('show-status', false)) {
+			PS_CLI_PRODUCT_PREFERENCES::show_status();
+			$status = true;
+		}
+		else {
+			self::_show_command_usage('product-preferences');
+			exit(1);
+		}
+	}
+
+	private static function _parse_customer_preferences_arguments(Garden\Cli\Args $arguments) {
+		if($arguments->getOpt('show-status', false)) {
+			PS_CLI_CUSTOMER_PREFERENCES::show_status();
+			$status = true;
+		}
+		else {
+			self::_show_command_usage('customer-preferences');
+			exit(1);
+		}
+
+		if($status) { exit(0); }
+		else { exit(1); }
+
+	}
+
+	private static function _parse_option_arguments(Garden\Cli\Args $arguments) {
+                $key = $arguments->getOpt('option', null);
+                $value = $arguments->getOpt('value', null);
+
+		if(is_null($key)) {
+			echo "Error, option argument must be set\n";
+			self::_show_command_usage('option');
+			exit(1);
+		}
+
+		$action = $arguments->getOpt('action', null);
+
+		if($action == 'get') {
+			$table = new Cli\Table();
+
+			$table->setHeaders(Array('Option name', 'Value'));
+
+			$value = Configuration::get($key);
+
+			$table->addRow(Array(
+				$key,
+				$value
+				)
+			);
+
+			$table->display();
+
+			$status = true;
+		}
+		elseif($action == 'update') {
+
+			if(is_null($value)) {
+				echo "Error, value argument must be set\n";
+				self::_show_command_usage('option');
+				exit(1);
+			}
+
+			if(! PS_CLI_VALIDATOR::validation_configuration_key($key, $value)) {
+				echo "Error, $value is not a valid value for $key\n";
+				exit(1);
+			}
+
+
+			$successMsg = "Option $key successfully set to $value";
+			$errMsg = "Could not update option $key with value $value";
+			$notChanged = "Option $key has already value $value";
+
+			$status = self::update_global_value($key, $value, $successMsg, $errMsg, $notChanged);
+		}
+		else {
+			echo "Invalid action argument\n";
+			self::_show_command_usage('option');
+			exit(1);
+		}
+
+                if($status) {
+                        exit(0);
+                }
+                else {
+                        exit(1);
+                }
 	}
 
 	public static function check_user_root() {
@@ -1423,7 +1224,7 @@ class PS_CLI_UTILS {
 	}
 
 	public static function add_boolean_configuration_status(Cli\Table &$table, $key, $friendlyName) {
-		$line = Array($friendlyName);
+		$line = Array($key, $friendlyName);
 		if(Configuration::get($key)) {
 			array_push($line, 'Enabled');
 		}
@@ -1435,7 +1236,7 @@ class PS_CLI_UTILS {
 	}
 
 	public static function add_configuration_value(Cli\Table &$table, $key, $friendlyName) {
-		$line = Array($friendlyName);
+		$line = Array($key, $friendlyName);
 
 		$value = Configuration::get($key);
 		array_push($line, $value);

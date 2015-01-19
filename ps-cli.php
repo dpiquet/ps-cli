@@ -83,6 +83,9 @@ require_once('ps-cli_import.php');
 require_once('ps-cli_ccc.php');
 require_once('ps-cli_preferences.php');
 require_once('ps-cli_order_preferences.php');
+require_once('ps-cli_product_preferences.php');
+require_once('ps-cli_customer_preferences.php');
+require_once('ps-cli_validator.php');
 
 // init context, etc...
 PS_CLI_UTILS::ps_cli_initialize();

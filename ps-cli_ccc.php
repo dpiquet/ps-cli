@@ -1,6 +1,8 @@
 <?php
 
 class PS_CLI_CCC {
+
+	//print status is currently in core class
 	
 	public static function enable_htaccess_cache() {
 		$successMsg = 'Successfully enabled htaccess cache control';

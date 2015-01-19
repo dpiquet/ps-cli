@@ -453,46 +453,22 @@ class PS_CLI_MODULES {
 		}
 	}
 
-/*
-	public static function disable_update_check() {
-		$currentStatus = (int)Configuration::getGlobalValue('PRESTASTORE_LIVE');
+	public static function print_module_status() {
+		$table = new Cli\Table();
 
-		if($currentStatus == 1) {
-			if (Configuration::updateGlobalValue('PRESTASTORE_LIVE', 0)) {
-				echo "Automatic modules updates check disabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not disable automatic modules updates check\n";
-				return false;
-			}
-		}
-		else {
-			echo "Automatic modules updates check is already disabled\n";
-			return true;
-		}
+		$table->setHeaders(Array(
+			'Key',
+			'Configuration',
+			'Value'
+			)
+		);
+
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_DISABLE_NON_NATIVE', 'Disable non native modules');
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_DISABLE_OVERRIDES', 'Disable all overrides');
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PRESTASTORE_LIVE', 'Automatically check modules updates');
+
+		$table->display();
 	}
-
-	public static function enable_update_check() {
-		$currentStatus = (int)Configuration::getGlobalValue('PRESTASTORE_LIVE');
-
-		if($currentStatus == 0) {
-			if (Configuration::updateGlobalValue('PRESTASTORE_LIVE', 1)) {
-				echo "Automatic modules updates check enabled\n";
-				return true;
-			}
-			else {
-				echo "Error, could not enable automatic modules updates check\n";
-				return false;
-			}
-		}
-		else {
-			echo "Automatic modules updates check is already enabled\n";
-			return true;
-		}
-
-	}
-*/
 }
 
 ?>

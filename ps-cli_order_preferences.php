@@ -4,9 +4,9 @@ class PS_CLI_ORDER_PREFERENCES {
 	public static function print_order_preferences() {
 		$table = new Cli\Table();
 
-		$table->setHeaders(Array('Configuration', 'Value'));
+		$table->setHeaders(Array('Key', 'Configuration', 'Value'));
 
-		$line = Array('Checkout process');
+		$line = Array('PS_ORDER_PROCESS_TYPE', 'Checkout process');
 		$orderType = Configuration::get('PS_ORDER_PROCESS_TYPE');
 
 		if($orderType == PS_ORDER_PROCESS_STANDARD) {

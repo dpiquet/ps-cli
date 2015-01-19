@@ -83,6 +83,7 @@ class PS_CLI_CORE {
 
 		$table = new Cli\Table();
 		$table->setHeaders(Array(
+			'Key',
 			'Configuration',
 			'Value'
 			)
@@ -92,7 +93,7 @@ class PS_CLI_CORE {
 
 		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
 
-		$line = Array('Smarty Template Compilation');
+		$line = Array('PS_SMARTY_FORCE_COMPILE', 'Smarty Template Compilation');
 		switch($currentConfig) {
 			case _PS_SMARTY_NO_COMPILE_:
 				array_push($line, 'never');
@@ -112,7 +113,7 @@ class PS_CLI_CORE {
 		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_CACHE_CONTROL', 'Htaccess cache control');
 		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_MEDIA_SERVERS', 'Use Media Servers');
 
-		$line = Array('Cipher');
+		$line = Array('PS_CIPHER_ALGORITHM', 'Cipher');
 
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM')) {
 			array_push($line, 'RIJNDAEL/Mcrypt');
@@ -123,7 +124,7 @@ class PS_CLI_CORE {
 
 		$table->addRow($line);
 
-		$line = Array('Cache');
+		$line = Array('Const: _PS_CACHE_ENABLED_', 'Cache');
 
 		if ( _PS_CACHE_ENABLED_ ) {
 			array_push($line, 'enabled');
@@ -133,6 +134,13 @@ class PS_CLI_CORE {
 		}
 
 		$table->addRow($line);
+
+		$table->addRow(Array(
+			'Const: _PS_CACHING_SYSTEM_',
+			'Active Caching system',
+			_PS_CACHING_SYSTEM_
+			)
+		);
 
 		$table->display();
 

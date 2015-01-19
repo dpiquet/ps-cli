@@ -30,6 +30,7 @@ class PS_CLI_PREFERENCES {
 
 
 		$table->setHeaders(Array(
+			'Key',
 			'Configuration',
 			'Value'
 			)
@@ -47,7 +48,7 @@ class PS_CLI_PREFERENCES {
 		PS_CLI_UTILS::add_configuration_value($table, 'PS_LIMIT_UPLOAD_IMAGE_VALUE', 'Maximum image upload size (MB)');
 		PS_CLI_UTILS::add_configuration_value($table, 'PS_ATTACHMENT_MAXIMUM_SIZE', 'Maximum attachment size (MB)');
 
-		$line = Array('Round mode');
+		$line = Array('PS_PRICE_ROUND_MODE', 'Round mode (0=superior, 1=inferior, 2=classic)');
 		$roundMode = Configuration::get('PS_PRICE_ROUND_MODE');
 		switch($roundMode) {
 			case 0:
@@ -67,8 +68,9 @@ class PS_CLI_PREFERENCES {
 
 		$shopActivity = Configuration::get('PS_SHOP_ACTIVITY');
 		$line = Array(
+			'PS_SHOP_ACTIVITY',
 			'Shop activity',
-			$activities[$shopActivity]
+			$activities[$shopActivity] . " [$shopActivity]"
 		);
 
 		$table->addRow($line);
@@ -76,103 +78,6 @@ class PS_CLI_PREFERENCES {
 		$table->display();
 	}
 
-	public static function set_round_mode($roundMode) {
-		$currentRoundMode = Configuration::get('PS_PRICE_ROUND_MODE');
-
-		switch($roundMode) {
-			case 'superior':
-				$newRoundMode = 0;
-				break;
-
-			case 'inferior':
-				$newRoundMode = 1;
-				break;
-
-			case 'classic':
-				$newRoundMode = 2;
-				break;
-
-			default:
-				echo "Invalid round mode: $roundMode\n";
-				return false;
-		}
-
-		if($newRoundMode == $currentRoundMode) {
-			echo "$roundMode is already the current round mode\n";
-			return true;
-		}
-
-		return Configuration::updateValue('PS_PRICE_ROUND_MODE', $newRoundMode);
-	}
-
-	public static function set_max_file_size($maxFileSize) {
-		$current = Configuration::get('PS_LIMIT_UPLOAD_FILE_VALUE');
-
-		if($maxFileSize == $current) {
-			echo "Maximum file upload size is already $maxFileSize\n";
-			return true;
-		}
-
-		if ($maxFileSize <= 0) {
-			echo "Error, max file size must be higher than 0\n";
-			return false;
-		}
-
-		if(Configuration::updateValue('PS_LIMIT_UPLOAD_FILE_VALUE', $maxFileSize)) {
-			echo "Successfully set max file size to $maxFileSize\n";
-			return true;
-		}
-		else {
-			echo "Error, could not update max file size value\n";
-			return false;
-		}
-	}
-
-	public static function set_max_image_size($maxFileSize) {
-		$current = Configuration::get('PS_LIMIT_UPLOAD_IMAGE_VALUE');
-
-		if($maxFileSize == $current) {
-			echo "Maximum image upload size is already $maxFileSize\n";
-			return true;
-		}
-
-		if ($maxFileSize <= 0) {
-			echo "Error, max image size must be higher than 0\n";
-			return false;
-		}
-
-		if(Configuration::updateValue('PS_LIMIT_UPLOAD_IMAGE_VALUE', $maxFileSize)) {
-			echo "Successfully set max image size to $maxFileSize\n";
-			return true;
-		}
-		else {
-			echo "Error, could not update max image size upload value\n";
-			return false;
-		}
-	}
-
-	public static function set_max_attachment_size($maxFileSize) {
-		$current = Configuration::get('PS_ATTACHMENT_MAXIMUM_SIZE');
-
-		if($maxFileSize == $current) {
-			echo "Maximum attachment size is already $maxFileSize\n";
-			return true;
-		}
-
-		if ($maxFileSize <= 0) {
-			echo "Error, max attachment size must be higher than 0\n";
-			return false;
-		}
-
-		if(Configuration::updateValue('PS_ATTACHMENT_MAXIMUM_SIZE', $maxFileSize)) {
-			echo "Successfully set max attachment size to $maxFileSize\n";
-			return true;
-		}
-		else {
-			echo "Error, could not update max attachment size upload value\n";
-			return false;
-		}
-	}
 }
 
 ?>
