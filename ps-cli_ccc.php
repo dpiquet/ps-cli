@@ -40,9 +40,24 @@ class PS_CLI_CCC {
 		}
 	}
 
+	public static function set_cipher($cipher) {
+
+		if($cipher == 1) {
+			return self::enable_mcrypt_cipher();
+		}
+		elseif($cipher == 0) {
+			return self::enable_blowfish_cipher();
+		}
+		else {
+			echo "Invalid cipher value\n";
+			return false;
+		}
+	}
+
 	public static function enable_mcrypt_cipher() {
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM') == 1) {
-			echo "Rijndael/Mcrypt cipher is already enabled\n";
+			//echo "Rijndael/Mcrypt cipher is already enabled\n";
+			//silently return as we are a core function now
 			return true;
 		}
 
@@ -77,8 +92,8 @@ class PS_CLI_CCC {
                                                 copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php')
                                                 && (bool)file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings)
                                         )) {
-                                                Configuration::updateValue('PS_CIPHER_ALGORITHM', 1);
-						echo "Successfully enabled Rijndaelcipher\n";
+                                                //Configuration::updateValue('PS_CIPHER_ALGORITHM', 1);
+						//echo "Successfully enabled Rijndaelcipher\n";
                                                 return true;
                                         }
 			else {
@@ -90,7 +105,7 @@ class PS_CLI_CCC {
 
 	public static function enable_blowfish_cipher() {
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM') == 0) {
-			echo "Blowfish cipher is already enabled\n";
+			//echo "Blowfish cipher is already enabled\n";
 			return true;
 		}
 
@@ -120,8 +135,8 @@ class PS_CLI_CCC {
 					copy(_PS_ROOT_DIR_.'/config/settings.inc.php', _PS_ROOT_DIR_.'/config/settings.old.php')
 					&& (bool)file_put_contents(_PS_ROOT_DIR_.'/config/settings.inc.php', $new_settings)
 				)) {
-					Configuration::updateValue('PS_CIPHER_ALGORITHM', 0);
-					echo "Successfully enabled Blowfish cipher\n";
+					//Configuration::updateValue('PS_CIPHER_ALGORITHM', 0);
+					//echo "Successfully enabled Blowfish cipher\n";
 					return true;
 				}
 		else {

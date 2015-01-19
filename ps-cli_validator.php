@@ -6,9 +6,6 @@ class PS_CLI_VALIDATOR {
 	public static function validate_configuration_key($key, $value) {
 		switch($key) {
 
-
-
-
 			case 'PS_PRICE_ROUND_MODE':
 				$status = (Validate::isUnsignedInt($value) &&	
 						$value < 3);
@@ -24,6 +21,11 @@ class PS_CLI_VALIDATOR {
 			case 'PS_DEFAULT_WAREHOUSE_NEW_PRODUCT':
 			case 'PS_CONDITIONS_CMS_ID':
 				$status = Validate::isUnsignedId($value);
+				break;
+
+			case 'PS_CANONICAL_REDIRECT':
+				$status = (Validate::isUnsignedInt($value) &&
+						$value <= 2);
 				break;
 
 			case 'PS_SMARTY_FORCE_COMPILE':
@@ -42,15 +44,18 @@ class PS_CLI_VALIDATOR {
 				break;
 
 			case 'PS_CIPHER_ALGORITHM':
-				echo "ERROR: cipher algorithm must be updated with ccc command\n";
-				exit(1);
+				$status = Validate::isUnsignedInt($value);
+
+				//we must modify configuration file before setting the value
+				PS_CLI_UTILS::add_pre_hook('PS_CLI_CCC::set_cipher', Array($value));
+				break;
 
 			case 'PS_HTACCESS_CACHE_CONTROL':
 				echo "ERROR: htaccess cache control must be updated with ccc command\n";
 				exit(1);
 
 			case 'PS_SMARTY_FORCE_COMPILE':
-				echo "Error, smarty force compile must be updated witch cache command\n";
+				echo "Error, smarty force compile must be updated with cache command\n";
 				exit(1);
 
 			case 'PS_CATALOG_MODE':
@@ -76,6 +81,14 @@ class PS_CLI_VALIDATOR {
 				$status = false;
 				break;
 
+			case 'PS_SHOP_DOMAIN':
+			case 'PS_SHOP_DOMAIN_SSL':
+				//this is the validate used is AdminMetaController
+				$status = Validate::isCleanHtml($value);
+
+				// post hook to regen .htaccess and clear cache
+				PS_CLI_UTILS::add_post_hook('PS_CLI_URL::post_update_uri', Array());
+				break;
 
 			default:	
 				$status = Validate::isBool($value);

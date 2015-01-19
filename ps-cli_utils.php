@@ -11,8 +11,9 @@ class PS_CLI_UTILS {
 
 	private static $_cli = false;
 
-	//callback array
-	public static $callbacks = Array();
+	//callback arrays
+	private static $preHooks = Array();
+	private static $postHooks = Array();
 
 	public static function ps_cli_initialize() {
 		self::$LANG = Configuration::get('PS_LANG_DEFAULT');
@@ -133,7 +134,9 @@ class PS_CLI_UTILS {
 
 			->command('url')
 				->description('Manage SEO & URL')
-				->opt('list-rewritings', false)
+				->opt('list-rewritings', 'List rewriting rules', false)
+				->opt('show-status', 'Show configuration', false)
+				->opt('base-uri', 'Set shop base URI', false, 'string')
 
 			->command('multistore')
 				->description('Perform Multistore operations')
@@ -167,7 +170,7 @@ class PS_CLI_UTILS {
 //				->opt('disable-js-minifier', 'Disable JavaScript code reduction', false)
 //				->opt('enable-js-lazyload', 'Move JS code to the end of HTML pages', false)
 //				->opt('disable-js-lazyload', 'Do not move JS code to the end of HTML pages', false)
-				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)', false)
+//				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)', false)
 				->opt('show-status', 'Show CCC configuration', false)
 
 			->command('preferences')
@@ -369,7 +372,6 @@ class PS_CLI_UTILS {
 			default:
 				echo "Not implemented\n";
 				break;
-
 		}
 
 		return;
@@ -907,6 +909,16 @@ class PS_CLI_UTILS {
 		if($opt = $arguments->getOpt('list-rewritings', false)) {
 			PS_CLI_URL::list_rewritings();
 		}
+		elseif($arguments->getOpt('show-status', false)) {
+			PS_CLI_URL::show_status();
+		}
+		elseif($baseUri = $arguments->getOpt('base-uri', null)) {
+			if(!Validate::isUrl($baseUri)) {
+				echo "Error: '$baseUri' is not a valid URI\n";
+				exit(1);
+			}
+			$status = PS_CLI_URL::update_base_uri($baseUri);
+		}
 		else {
 			self::_show_command_usage('url');
 			exit(1);
@@ -1019,28 +1031,6 @@ class PS_CLI_UTILS {
 
 			$status = self::update_global_value('PS_JS_THEME_COMPRESSION', false, $successMsg, $errMsg, $notChanged);
 		}
-		elseif($cipher = $arguments->getOpt('set-cipher', false)) {
-			switch($cipher) {
-				case 'blowfish':
-					$status = PS_CLI_CCC::enable_blowfish_cipher();
-					break;
-
-				case 'rijndael':
-					$status = PS_CLI_CCC::enable_mcrypt_cipher();
-					break;
-
-				default:
-					self::_show_command_usage('ccc');
-					exit(1);
-			}
-
-			if($status) {
-				exit(0);
-			}
-			else {
-				exit(1);
-			}
-		}
 		else {
 			self::_show_command_usage('ccc');
 			exit(1);
@@ -1152,17 +1142,23 @@ class PS_CLI_UTILS {
 				exit(1);
 			}
 
-			if(! PS_CLI_VALIDATOR::validation_configuration_key($key, $value)) {
+			if(! PS_CLI_VALIDATOR::validate_configuration_key($key, $value)) {
 				echo "Error, $value is not a valid value for $key\n";
 				exit(1);
 			}
 
+			if(!self::run_pre_hooks()) {
+				echo "Error, prehooks returned errors\n";
+				exit(1);
+			}
 
 			$successMsg = "Option $key successfully set to $value";
 			$errMsg = "Could not update option $key with value $value";
 			$notChanged = "Option $key has already value $value";
 
 			$status = self::update_global_value($key, $value, $successMsg, $errMsg, $notChanged);
+
+			self::run_post_hooks();
 		}
 		else {
 			echo "Invalid action argument\n";
@@ -1242,6 +1238,54 @@ class PS_CLI_UTILS {
 		array_push($line, $value);
 
 		$table->addRow($line);
+	}
+
+	public static function add_pre_hook($function, $vars = Array()) {
+		$hook = Array($function, $vars);
+
+		array_push(self::$preHooks, $hook);
+	}
+
+	public static function add_post_hook($function, $vars = Array()) {
+		$hook = Array($function, $vars);
+
+		array_push(self::$postHooks, $hook);
+	}
+
+	public static function run_pre_hooks() {
+		$status = true;
+
+		foreach(self::$preHooks as $preHook) {
+			if(is_callable($preHook[0])) {
+				$status &= call_user_func_array($preHook[0], $preHook[1]);
+			}
+			else {
+				if(self::$VERBOSE) {
+					echo "[WARN] ".$preHook[0]." is not a callable function\n";
+				}
+				// should we set return value to false ?
+			}
+		}
+
+		return $status;
+	}
+
+	public static function run_post_hooks() {
+		$status = true;
+
+		foreach(self::$postHooks as $postHook) {
+			if(is_callable($postHook[0])) {
+				$status &= call_user_func_array($postHook[0], $postHook[1]);
+			}
+			else {
+				if(self::$VERBOSE) {
+					echo "[WARN] ".$postHook[0]." is not a callable function\n";
+				}
+				// should we set return value to false ?
+			}
+		}
+
+		return $status;
 	}
 }
 

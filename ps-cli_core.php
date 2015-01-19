@@ -113,7 +113,7 @@ class PS_CLI_CORE {
 		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_CACHE_CONTROL', 'Htaccess cache control');
 		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_MEDIA_SERVERS', 'Use Media Servers');
 
-		$line = Array('PS_CIPHER_ALGORITHM', 'Cipher');
+		$line = Array('PS_CIPHER_ALGORITHM', 'Cipher (0=blowfish, 1=rijndael)');
 
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM')) {
 			array_push($line, 'RIJNDAEL/Mcrypt');
