@@ -234,6 +234,30 @@ class PS_CLI_IMAGES {
 
 		print_r($images);
 	}
+
+	public static function show_status() {
+				
+		$table = new Cli\Table();
+		$table->setHeaders(Array(
+			'Key',
+			'Configuration',
+			'Value'
+			)
+		);
+
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_IMAGE_QUALITY', 'Image format (jpg, png, png_all)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_JPEG_QUALITY', 'Jpeg compression (0-100)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PNG_QUALITY', 'Jpeg compression (0-9)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_IMAGE_GENERATION_METHOD', '(0=auto, 1=width, 2=height)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_MAX_SIZE', 'Maximum file size of customer pictures (in bytes)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_WIDTH', 'Width of product pictures custumers can upload (in px)');
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_HEIGHT', 'Height of product pictures custumers can upload (in px)');	
+
+		$table->display();
+
+		return;
+
+	}
 }
 
 ?>

@@ -43,6 +43,21 @@ class PS_CLI_VALIDATOR {
 						$value <= 7);
 				break;
 
+			case 'PS_PNG_QUALITY':
+				$status = (Validate::isUnsignedInt($value) &&
+						$value <= 9);
+
+				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
+				break;
+
+			case 'PS_IMAGE_GENERATION_METHOD':
+				$status = (Validate::isUnsignedInt($value) &&
+						$value <= 2);
+
+				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
+				break;
+
+
 			case 'PS_CIPHER_ALGORITHM':
 				$status = Validate::isUnsignedInt($value);
 
@@ -62,6 +77,9 @@ class PS_CLI_VALIDATOR {
 				echo "Error, catalog mode must be set with product-preferences command\n";
 				exit(1);
 
+			case 'PS_PRODUCT_PICTURE_MAX_SIZE':
+			case 'PS_PRODUCT_PICTURE_WIDTH':
+			case 'PS_PRODUCT_PICTURE_HEIGHT':
 			case 'PS_PASSWD_TIME_FRONT':
 			case 'PS_COOKIE_LIFETIME_FO':
 			case 'PS_COOKIE_LIFETIME_BO':
@@ -88,6 +106,19 @@ class PS_CLI_VALIDATOR {
 
 				// post hook to regen .htaccess and clear cache
 				PS_CLI_UTILS::add_post_hook('PS_CLI_URL::post_update_uri', Array());
+				break;
+
+			case 'PS_IMAGE_QUALITY':
+				$allowedValues = Array('jpg', 'png', 'png_all');
+				$status = in_array($value, $allowedValues);
+	
+				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
+				break;
+
+			case 'PS_JPEG_QUALITY':
+				$status = Validate::isPercentage($value);
+	
+				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
 				break;
 
 			default:	

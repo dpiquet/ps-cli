@@ -131,6 +131,7 @@ class PS_CLI_UTILS {
 				->opt('regenerate-thumbs', 'Regenerate thumbnails', false)
 				->opt('category', 'Specify images category (all, products, categories, manufacturers, suppliers, scenes, stores', false, 'string')
 				->opt('keep-old-images', 'Keep old images', false)
+				->opt('show-status', 'Show configuration', false)
 
 			->command('url')
 				->description('Manage SEO & URL')
@@ -172,6 +173,10 @@ class PS_CLI_UTILS {
 //				->opt('disable-js-lazyload', 'Do not move JS code to the end of HTML pages', false)
 //				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)', false)
 				->opt('show-status', 'Show CCC configuration', false)
+
+			->command('store')
+				->description('manage stores')
+				->opt('show-status', 'Show configuration')
 
 			->command('preferences')
 				->description('Set up PrestaShop preferences')
@@ -363,6 +368,10 @@ class PS_CLI_UTILS {
 
 			case 'customer-preferences':
 				self::_parse_customer_preferences_arguments($args);
+				break;
+
+			case 'store':
+				self::_parse_store_arguments($args);
 				break;
 
 			case 'option':
@@ -864,6 +873,9 @@ class PS_CLI_UTILS {
 		if ($opt = $arguments->getOpt('list', false)) {
 			PS_CLI_IMAGES::list_images();
 		}
+		elseif($arguments->getOpt('show-status', false)) {
+			PS_CLI_IMAGES::show_status();
+		}
 		elseif ($opt = $arguments->getOpt('regenerate-thumbs', false)) {
 
 			if($category = $arguments->getOpt('category', false)) {
@@ -1105,6 +1117,24 @@ class PS_CLI_UTILS {
 
 	}
 
+	public static function _parse_store_arguments(Garden\Cli\Args $arguments) {
+		if($arguments->getOpt('show-status')) {
+			PS_CLI_STORES::show_status();
+			$status = true;
+		}
+		else {
+			self::_show_command_usage('store');
+			exit(1);
+		}
+
+		if($status) {
+			exit(0);
+		}
+		else {
+			exit(1);
+		}
+	}
+
 	private static function _parse_option_arguments(Garden\Cli\Args $arguments) {
                 $key = $arguments->getOpt('option', null);
                 $value = $arguments->getOpt('value', null);
@@ -1275,6 +1305,7 @@ class PS_CLI_UTILS {
 
 		foreach(self::$postHooks as $postHook) {
 			if(is_callable($postHook[0])) {
+				if(self::$VERBOSE) { echo "Running postHook $postHook[0]\n"; }
 				$status &= call_user_func_array($postHook[0], $postHook[1]);
 			}
 			else {
