@@ -229,10 +229,39 @@ class PS_CLI_IMAGES {
 		return true;
 	}
 
+	// todo get images full path
 	public static function list_images() {
+		$context = Context::getContext();
 		$images = Image::getAllImages();
 
-		print_r($images);
+		$table = new Cli\Table();
+		$table->setHeaders(Array(
+			'id_image', 
+			'id_product',
+			'product name',
+			'path'
+			)
+		);
+
+		foreach($images as $image) {
+			$product = new Product($image['id_product']);
+			$img = new Image($image['id_image']);
+
+			//print_r($img);
+			//die();
+
+			$table->addRow(Array(
+				$image['id_image'],
+				$image['id_product'],
+				$product->name[$context->language->id],
+				$img->getImgPath() .'.'. $img->image_format
+				)
+			);
+		}
+
+		$table->display();
+
+		return;
 	}
 
 	public static function show_status() {
@@ -251,7 +280,7 @@ class PS_CLI_IMAGES {
 		PS_CLI_UTILS::add_configuration_value($table, 'PS_IMAGE_GENERATION_METHOD', '(0=auto, 1=width, 2=height)');
 		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_MAX_SIZE', 'Maximum file size of customer pictures (in bytes)');
 		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_WIDTH', 'Width of product pictures custumers can upload (in px)');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_HEIGHT', 'Height of product pictures custumers can upload (in px)');	
+		PS_CLI_UTILS::add_configuration_value($table, 'PS_PRODUCT_PICTURE_HEIGHT', 'Height of product pictures custumers can upload (in px)');
 
 		$table->display();
 

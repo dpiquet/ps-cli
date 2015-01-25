@@ -74,13 +74,9 @@ class PS_CLI_UTILS {
 				->opt('show-status', 'show cache configuration', false, 'string')
 				->opt('disable-cache', 'Disable PrestaShop cache', false)
 				->opt('enable-cache', 'Enable PrestaShop cache', false)
-//				->opt('enable-css-cache', 'Enable CSS cache', false)
-//				->opt('disable-css-cache', 'Disable CSS cache', false)
-//				->opt('enable-js-cache', 'Enable JS cache', false)
-//				->opt('disable-js-cache', 'Disable JS cache', false)
 				->opt('cache-depth', 'Set cache depth (default 1)', false, 'integer')
 				->opt('recompile-smarty', 'Set smarty compilation (allways, never, modified)', false, 'string')
-//				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
+				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
 
 			->command('employee')
 				->description('Manage PrestaShop employees')
@@ -165,13 +161,6 @@ class PS_CLI_UTILS {
 
 			->command('ccc')
 				->description('Configuration CCC (Concatenation, Compression and Cache)')
-//				->opt('enable-html-minifier', 'Enable the HTML code reduction', false)
-//				->opt('disable-html-minifier', 'Disable the HTML code reduction', false)
-//				->opt('enable-js-minifier', 'Enable JavaScript code reduction', false)
-//				->opt('disable-js-minifier', 'Disable JavaScript code reduction', false)
-//				->opt('enable-js-lazyload', 'Move JS code to the end of HTML pages', false)
-//				->opt('disable-js-lazyload', 'Do not move JS code to the end of HTML pages', false)
-//				->opt('set-cipher', 'Set cipher algorithm (rijndael or blowfish)', false)
 				->opt('show-status', 'Show CCC configuration', false)
 
 			->command('store')
@@ -193,6 +182,11 @@ class PS_CLI_UTILS {
 			->command('customer-preferences')
 				->description('PrestaShop customers preferences')
 				->opt('show-status', 'Show current customer preferences', false)
+
+			->command('search-preferences')
+				->description('PrestaShop search preferences')
+				->opt('show-status', 'Show current search configuration', false)
+				->opt('list-aliases', 'List search aliases', false)
 
 			->command('option')
 				->opt('action', 'action: get or update', true, 'string')
@@ -278,6 +272,10 @@ class PS_CLI_UTILS {
 
 			$context = Context::getContext();
 			$context->language = $language;
+		}
+		else {
+			//we should be reliable and set $LANG in any cases
+			// anyway we'd better del it and use context instead
 		}
 
 		// check if we have to switch shop id in context
@@ -368,6 +366,10 @@ class PS_CLI_UTILS {
 
 			case 'customer-preferences':
 				self::_parse_customer_preferences_arguments($args);
+				break;
+
+			case 'search-preferences':
+				self::_parse_search_preferences_arguments($args);
 				break;
 
 			case 'store':
@@ -1132,6 +1134,28 @@ class PS_CLI_UTILS {
 		}
 		else {
 			exit(1);
+		}
+	}
+
+	private static function _parse_search_preferences_arguments(Garden\Cli\Args $arguments) {
+		if($arguments->getOpt('show-status', false)) {
+			PS_CLI_SEARCH::show_status();
+			$status = true;
+		}
+		elseif($arguments->getOpt('list-aliases', false)) {
+			PS_CLI_SEARCH::list_aliases();
+			$status = true;
+		}
+		else {
+			_show_command_usage('search-preferences');
+			exit(1);
+		}
+
+		if($status) {
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 

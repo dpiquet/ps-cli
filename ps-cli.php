@@ -86,6 +86,7 @@ require_once('ps-cli_order_preferences.php');
 require_once('ps-cli_product_preferences.php');
 require_once('ps-cli_customer_preferences.php');
 require_once('ps-cli_stores.php');
+require_once('ps-cli_search.php');
 require_once('ps-cli_validator.php');
 
 // init context, etc...

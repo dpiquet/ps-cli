@@ -17,6 +17,28 @@ class PS_CLI_VALIDATOR {
 				$status = Validate::isPrice($value);
 				break;
 
+			case 'PS_SHOP_COUNTRY_ID':
+				$status = (Validate::isUnsignedId($value) &&
+					self::isValidCountryId($value)
+					);
+				break;
+
+			case 'PS_CONDITIONS_CMS_ID':
+				$status = (Validate::isUnsignedId($value) &&
+					self::isValidPageId($value)
+					);
+				break;
+
+			case 'PS_SEARCH_WEIGHT_PNAME':
+			case 'PS_SEARCH_WEIGHT_REF':
+			case 'PS_SEARCH_WEIGHT_SHORTDESC':
+			case 'PS_SEARCH_WEIGHT_DESC':
+			case 'PS_SEARCH_WEIGHT_CNAME':
+			case 'PS_SEARCH_WEIGHT_MNAME':
+			case 'PS_SEARCH_WEIGHT_TAG':
+			case 'PS_SEARCH_WEIGHT_ATTRIBUTE':
+			case 'PS_SEARCH_WEIGHT_FEATURE':
+			case 'PS_SHOP_STATE_ID':
 			case 'PS_GIFT_WRAPPING_TAX_RULES_GROUP':
 			case 'PS_DEFAULT_WAREHOUSE_NEW_PRODUCT':
 			case 'PS_CONDITIONS_CMS_ID':
@@ -77,6 +99,20 @@ class PS_CLI_VALIDATOR {
 				echo "Error, catalog mode must be set with product-preferences command\n";
 				exit(1);
 
+			case 'PS_STORES_CENTER_LAT':
+			case 'PS_STORES_CENTER_LONG':
+				$status = Validate::isCoordinate($value);
+				break;
+
+			case 'PS_SHOP_NAME':
+				$status = Validate::isCoordinate($value);
+				break;
+
+			case 'PS_SHOP_EMAIL':
+				$status = Validate::isEmail($value);
+				break;
+
+			case 'PS_SEARCH_MINWORDLEN':
 			case 'PS_PRODUCT_PICTURE_MAX_SIZE':
 			case 'PS_PRODUCT_PICTURE_WIDTH':
 			case 'PS_PRODUCT_PICTURE_HEIGHT':
@@ -121,6 +157,29 @@ class PS_CLI_VALIDATOR {
 				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
 				break;
 
+			case 'PS_SEARCH_BLACKLIST':
+			case 'PS_SHOP_DETAILS':
+				$status = Validate::isString($value);
+				break;
+
+			case 'PS_SHOP_ADDR1':
+			case 'PS_SHOP_ADDR2':
+				$status = Validate::isAddress($value);
+				break;
+
+			case 'PS_SHOP_CODE':
+				$status = Validate::isPostCode($value);
+				break;
+
+			case 'PS_SHOP_CITY':
+				$status = Validate::isCityName($value);
+				break;
+
+			case 'PS_SHOP_PHONE':
+			case 'PS_SHOP_FAX':
+				$status = Validate::isPhoneNumber($value);
+				break;
+
 			default:	
 				$status = Validate::isBool($value);
 				break;
@@ -129,6 +188,30 @@ class PS_CLI_VALIDATOR {
 
 		// by default, check if boolean (most common case)
 		return $status;
+	}
+
+	public static function isValidCountryId($id) {
+		$country = new Country($id);
+
+		return isLoadedObject($country);		
+	}
+
+	public static function isValidPageId($id) {
+		$page = new CMS($id);
+
+		return isLoadedObject($page);
+	}
+
+	public static function isValidCategoryId($id) {
+		$category = new CMSCategory($id);
+
+		return isLoadedObject($category);
+	}
+
+	public static function isValidTaxGroupId($id) {
+		$taxGroup = new TaxRulesGroup($id);
+
+		return isLoadedObject($taxGroup);
 	}
 }
 
