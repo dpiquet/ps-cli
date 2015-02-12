@@ -18,17 +18,17 @@ class PS_CLI_UTILS {
 	public static function ps_cli_initialize() {
 		self::$LANG = Configuration::get('PS_LANG_DEFAULT');
 
-		self::_load_ps_cli_dependancies();
+//		self::_load_ps_cli_dependancies();
 		self::ps_cli_init_admin_context();
 	}
 
 	private static function _load_ps_cli_dependancies() {
-		require_once('php-cli-tools/load-php-cli-tools.php');
+//		require_once('php-cli-tools/load-php-cli-tools.php');
 
 		// include garden-cli argument parser
-		require_once('garden-cli/Args.php');
-		require_once('garden-cli/Cli.php');
-		require_once('garden-cli/Table.php');
+//		require_once('garden-cli/Args.php');
+//		require_once('garden-cli/Cli.php');
+//		require_once('garden-cli/Table.php');
 
 	}
 
