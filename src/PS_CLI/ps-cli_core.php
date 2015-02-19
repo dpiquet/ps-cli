@@ -344,6 +344,7 @@ class PS_CLI_CORE {
 
 	// we should not load core before loading this
 	public static function upgrade_core() {
+		//todo: rewrite with new path vars
 		if (! @chdir('../install/upgrade/') ) {
 			echo "Could not find ../install/upgrade directory\n";
 			return false;
@@ -355,6 +356,54 @@ class PS_CLI_CORE {
 		}
 
 		echo "End of upgrade process\n";
+	}
+
+	public static function print_server_info() {
+		$table = new Cli\Table();
+
+		$table->addRow(Array(
+			'MySQL version',
+			Db::getInstance()->getVersion()
+			)
+		);
+
+		$table->addRow(Array(
+			'MySQL server',
+			_DB_SERVER_
+			)
+		);
+
+		$table->addRow(Array(
+			'Database name',
+			_DB_NAME_
+			)
+		);
+		
+		$table->addRow(Array(
+			'User',
+			_DB_USER_
+			)
+		);
+
+		$table->addRow(Array(
+			'Prefix',
+			_DB_PREFIX_
+			)
+		);
+
+		$table->addRow(Array(
+			'Engine',
+			_MYSQL_ENGINE_
+			)
+		);
+
+		$table->addRow(Array(
+			'PrestaShop version',
+			_PS_VERSION_
+			)
+		);
+
+		$table->display();
 	}
 }
 

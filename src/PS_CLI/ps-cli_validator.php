@@ -1,5 +1,11 @@
 <?php
 
+/*
+ *
+ * Configuration parameter validation and callback association 
+ *
+ */
+
 class PS_CLI_VALIDATOR {
 
 	//return boolean
@@ -8,7 +14,7 @@ class PS_CLI_VALIDATOR {
 
 			case 'PS_PRICE_ROUND_MODE':
 				$status = (Validate::isUnsignedInt($value) &&	
-						$value < 3);
+						(int)$value < 3);
 				break;
 
 
@@ -17,18 +23,42 @@ class PS_CLI_VALIDATOR {
 				$status = Validate::isPrice($value);
 				break;
 
+			case 'PS_COUNTRY_DEFAULT':
 			case 'PS_SHOP_COUNTRY_ID':
 				$status = (Validate::isUnsignedId($value) &&
-					self::isValidCountryId($value)
+					self::isValidObjectId('Country', $value)
 					);
 				break;
 
 			case 'PS_CONDITIONS_CMS_ID':
 				$status = (Validate::isUnsignedId($value) &&
-					self::isValidPageId($value)
-					);
+					self::isValidObjectId('CMS', $value)
+				);
+
 				break;
 
+			// Check if is a valid installed language id
+			case 'PS_LANG_DEFAULT':
+				$status = (Validate::isUnsignedId &&
+					self::isValidObjectId('Language', $value)
+				);
+
+				break;
+
+			case 'PS_MAIL_TYPE':
+				switch($value) {
+					case Mail::TYPE_HTML:
+					case Mail::TYPE_TEXT:
+					case Mail::TYPE_BOTH:
+						$status = true;
+						break;
+					default:
+						$status = false;
+						break;
+				}
+
+			case 'PS_MAIL_EMAIL_MESSAGE':
+			case 'PS_MAIL_METHOD':
 			case 'PS_SEARCH_WEIGHT_PNAME':
 			case 'PS_SEARCH_WEIGHT_REF':
 			case 'PS_SEARCH_WEIGHT_SHORTDESC':
@@ -47,34 +77,34 @@ class PS_CLI_VALIDATOR {
 
 			case 'PS_CANONICAL_REDIRECT':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 2);
+						(int)$value <= 2);
 				break;
 
 			case 'PS_SMARTY_FORCE_COMPILE':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 3);
+						(int)$value <= 3);
 				break;
 
 			case 'PS_CACHEFS_DIRECTORY_DEPTH':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 5);
+						(int)$value <= 5);
 				break;
 
 			case 'PS_PRODUCTS_ORDER_BY':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 7);
+						(int)$value <= 7);
 				break;
 
 			case 'PS_PNG_QUALITY':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 9);
+						(int)$value <= 9);
 
 				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
 				break;
 
 			case 'PS_IMAGE_GENERATION_METHOD':
 				$status = (Validate::isUnsignedInt($value) &&
-						$value <= 2);
+						(int)$value <= 2);
 
 				PS_CLI_UTILS::add_post_hook('PS_CLI_IMAGES::regenerate_thumbnails', Array('all', true));
 				break;
@@ -105,13 +135,14 @@ class PS_CLI_VALIDATOR {
 				break;
 
 			case 'PS_SHOP_NAME':
-				$status = Validate::isCoordinate($value);
+				$status = Validate::isName($value);
 				break;
 
 			case 'PS_SHOP_EMAIL':
 				$status = Validate::isEmail($value);
 				break;
 
+			case 'PS_SMTP_PORT':
 			case 'PS_SEARCH_MINWORDLEN':
 			case 'PS_PRODUCT_PICTURE_MAX_SIZE':
 			case 'PS_PRODUCT_PICTURE_WIDTH':
@@ -180,38 +211,78 @@ class PS_CLI_VALIDATOR {
 				$status = Validate::isPhoneNumber($value);
 				break;
 
-			default:	
+			case 'PS_VOLUME_UNIT':
+			case 'PS_WEIGHT_UNIT':
+				$status = Validate::isWeightUnit($value);
+				break;
+
+			case 'PS_DIMENSION_UNIT':
+			case 'PS_DISTANCE_UNIT':
+				$status = Validate::isDistanceUnit($value);
+				break;
+
+			case 'PS_CURRENCY_DEFAULT':
+				$status = self::isValidObjectId('Currency', $value);
+				break;
+
+			case 'PS_LOCALE_LANGUAGE':
+			case 'PS_LOCALE_COUNTRY':
+				$status = Validate::isLanguageIsoCode($value);
+				break;
+
+			case 'PS_MAIL_DOMAIN':
+				$status = Validate::isUrl($value);
+				break;
+
+			case 'PS_MAIL_SMTP_ENCRYPTION':
+				switch($value) {
+					case 'off':
+					case 'tls':
+					case 'ssl':
+						$status = true;
+						break;
+					default:
+						$status = false;
+						break;
+				}
+				break;
+
+			//todo: check isGenericName
+			case 'PS_MAIL_SERVER':
+				$status = Validate::isGenericName($value);
+				break;
+
+			// as of PS 1.6.0.11, these are not validated
+			// todo: validate these with local functions
+			case 'PS_TIMEZONE':
+			case 'PS_MAIL_PASSWD':
+				$status = Validate::isAnything();
+				break;
+
+			// by default, check if boolean (most common case)
+			default:
 				$status = Validate::isBool($value);
 				break;
 
 		}
 
-		// by default, check if boolean (most common case)
 		return $status;
 	}
 
-	public static function isValidCountryId($id) {
-		$country = new Country($id);
+	// check if we can get an instance of the class with given ID
+	// Useful to check if a language is installed, a user exists, ...
+	public static function isValidObjectId($class, $id) {
+		if(!Validate::isUnsignedId($id)) {
+			return false;
+		}
 
-		return isLoadedObject($country);		
-	}
+		if(!class_exists($class)) {
+			return false;
+		}
 
-	public static function isValidPageId($id) {
-		$page = new CMS($id);
+		$obj = new $class((int)$id);
 
-		return isLoadedObject($page);
-	}
-
-	public static function isValidCategoryId($id) {
-		$category = new CMSCategory($id);
-
-		return isLoadedObject($category);
-	}
-
-	public static function isValidTaxGroupId($id) {
-		$taxGroup = new TaxRulesGroup($id);
-
-		return isLoadedObject($taxGroup);
+		return Validate::isLoadedObject($obj);
 	}
 }
 

@@ -1,7 +1,13 @@
 <?php
 $srcRoot = "src";
 $buildRoot = "build";
-  
+
+#delete previously generated phar if exists
+if (file_exists($buildRoot.'/ps-cli.phar')) {
+	unlink ($buildRoot.'/ps-cli.phar') or die ("Error, could not delete previously created phar ! \n");
+}
+
+
 $phar = new Phar($buildRoot . '/ps-cli.phar', 0, 'ps-cli.phar');
 
 $phar->buildFromDirectory(dirname(__FILE__) . '/src/');

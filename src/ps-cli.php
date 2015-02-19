@@ -3,62 +3,8 @@
 #
 # Prestashop cli tool
 #
-# FUNCTIONS:
+# Load Ps-cli code and start execution
 #
-#
-# TODO
-#	CORE
-#	  - Check updates
-#         - list shops
-#         - upgrade database (files already updated)
-#	  - controles CCC
-#
-#
-#	TEMPLATES
-#	  - list templates
-#
-#	INTERNALS
-#	  - oop
-#	  - cli arguments
-#	
-#
-
-/* Define some $_SERVERS var to avoid errors */
-//$_SERVER['REQUEST_URI'] = 'admin.php?id_shop=2';
-
-//$_GET['id_shop'] = '2';
-//$_POST['id_shop'] = '2';
-
-//$_GET['setShopContext'] = 's-2';
-//$_POST['setShopContext'] = 's-2';
-
-
-/*=================================
-|
-|	Load Prestashop Core
-|
-\==================================**/
-
-if (!defined('_PS_ADMIN_DIR_'))
-        define('_PS_ADMIN_DIR_', getcwd());
-
-if (!defined('PS_ADMIN_DIR'))
-        define('PS_ADMIN_DIR', _PS_ADMIN_DIR_);
-
-/*
-   Prestashop checks if config/settings.inc.php exists
-   before loading. If it does not exists, it performs
-   header('location'). ps-cli must check for this before
-   loading prestashop core
-*/
-
-if (! file_exists(_PS_ADMIN_DIR_.'/../config/settings.inc.php') ) {
-	echo "Prestashop seems not installed ! (no config/settings.inc.php found)\n";
-	die();
-}
-
-require_once(_PS_ADMIN_DIR_.'/../config/config.inc.php');
-require_once(_PS_ADMIN_DIR_.'/functions.php');
 
 /*====================================
 |
@@ -87,21 +33,40 @@ require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_customer_preferences.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_stores.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_search.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_validator.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_arguments.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_configure.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_localization.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_email.php');
 
-require_once(PS_CLI_ROOT . '/PS_CLI/php-cli-tools/load-php-cli-tools.php');
+/*
+ * Load librairies
+ */
+//php-cli-tools
+require_once(PS_CLI_ROOT . '/lib/php-cli-tools/load-php-cli-tools.php');
 
-// include garden-cli argument parser
-require_once(PS_CLI_ROOT . '/PS_CLI/garden-cli/Args.php');
-require_once(PS_CLI_ROOT . '/PS_CLI/garden-cli/Cli.php');
-require_once(PS_CLI_ROOT . '/PS_CLI/garden-cli/Table.php');
+//garden-cli argument parser
+require_once(PS_CLI_ROOT . '/lib/garden-cli/Args.php');
+require_once(PS_CLI_ROOT . '/lib/garden-cli/Cli.php');
+require_once(PS_CLI_ROOT . '/lib/garden-cli/Table.php');
 
+// do not run as root (unless --allow-root is given)
+PS_CLI_UTILS::check_user_root();
 
+$conf = PS_CLI_CONFIGURE::getConfigurationInstance();
+$conf->preload_configure();
 
+//load ps core
+PS_CLI_UTILS::ps_cli_load_ps_core();
 
+$conf->postload_configure();
+
+//find what to run
+$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+$arguments->runArgCommand();
 
 // init context, etc...
-PS_CLI_UTILS::ps_cli_initialize();
+//PS_CLI_UTILS::ps_cli_initialize();
 
-PS_CLI_UTILS::parse_arguments();
+//PS_CLI_UTILS::parse_arguments();
 
 ?>
