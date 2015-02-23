@@ -12,6 +12,7 @@ class PS_CLI_VALIDATOR {
 	public static function validate_configuration_key($key, $value) {
 		switch($key) {
 
+			case 'PS_SMARTY_CONSOLE':
 			case 'PS_PRICE_ROUND_MODE':
 				$status = (Validate::isUnsignedInt($value) &&	
 						(int)$value < 3);
@@ -246,6 +247,17 @@ class PS_CLI_VALIDATOR {
 						break;
 				}
 				break;
+
+			case 'PS_SMARTY_CACHING_TYPE':
+				switch($value) {
+					case 'filesystem':
+					case 'mysql':
+						$status = true;
+						break;
+					default:
+						$status = false;
+						break;
+				}
 
 			//todo: check isGenericName
 			case 'PS_MAIL_SERVER':

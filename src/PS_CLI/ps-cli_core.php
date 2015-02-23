@@ -20,6 +20,19 @@ class PS_CLI_CORE {
 		else { echo 'Prestashop is up to date'; }
 	}
 
+	public static function core_show_version() {
+		$version = _PS_VERSION_;
+
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		if($configuration->porcelain) {
+			echo "$version\n";
+		}
+		else {
+			echo "PrestaShop version is $version\n";
+		}
+	}
+
 	public static function core_list_changed_files() {
 		$upgrader = new UpgraderCore;
 		$files = $upgrader->getChangedFilesList();
@@ -72,10 +85,36 @@ class PS_CLI_CORE {
 	}
 
 	public static function clear_smarty_cache() {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		echo "Clearing cache...\n";
+
+		if($configuration->verbose) {
+			echo "Smarty cache ";
+		}
 		Tools::clearSmartyCache();
+
+		if($configuration->verbose) {
+			echo "[OK]\nXML cache ";
+		}
 		Tools::clearXMLCache();
+
+		if($configuration->verbose) {
+			echo "[OK]\nClearing media cache ";
+		}
 		Media::clearCache();
+
+		if($configuration->verbose) {
+			echo "[OK]\nRegenerating index ";
+		}
 		Tools::generateIndex();
+
+		if($configuration->verbose) {
+			echo "[OK]\n";
+		}
+
+		echo "Done !\n";
+
 		return true;	
 	}
 
@@ -89,29 +128,71 @@ class PS_CLI_CORE {
 			)
 		);
 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_SMARTY_CACHE', 'Smarty Template Cache');
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_SMARTY_CACHE', 
+			'Smarty Template Cache');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table, 
+			'PS_SMARTY_CACHING_TYPE', 
+			'Smarty Caching type', 
+			'1.6.0.11');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table,
+			'PS_SMARTY_CONSOLE',
+			'Display smarty console (0 for never, 1 for URL, 2 for always)',
+			'1.6.0.11');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table,
+			'PS_SMARTY_CONSOLE_KEY',
+			'Smarty console key',
+			'1.6.0.11');
 
 		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
 
-		$line = Array('PS_SMARTY_FORCE_COMPILE', 'Smarty Template Compilation');
+		$line = Array(
+			'PS_SMARTY_FORCE_COMPILE',
+			'Smarty Template Compilation ('.
+				_PS_SMARTY_NO_COMPILE_.' for never, '.
+				_PS_SMARTY_CHECK_COMPILE_.' for updated, '.
+				_PS_SMARTY_FORCE_COMPILE_.' for always)'
+		);
 		switch($currentConfig) {
 			case _PS_SMARTY_NO_COMPILE_:
-				array_push($line, 'never');
+				array_push($line, $currentConfig.' (never)');
 				break;
 			case _PS_SMARTY_CHECK_COMPILE_:
-				array_push($line, 'if updated');
+				array_push($line, $currentConfig.' (if updated)');
 				break;
 			case _PS_SMARTY_FORCE_COMPILE_:
-				array_push($line, 'Always');
+				array_push($line, $currentConfig.' (Always)');
 				break;
 		}
 
 		$table->addRow($line);
 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_CSS_THEME_CACHE', 'Css cache');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_JS_THEME_CACHE', 'JS cache'); 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_CACHE_CONTROL', 'Htaccess cache control');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_MEDIA_SERVERS', 'Use Media Servers');
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_CSS_THEME_CACHE', 
+			'Css cache');
+
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_JS_THEME_CACHE', 
+			'JS cache'); 
+
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_HTACCESS_CACHE_CONTROL', 
+			'Htaccess cache control');
+
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_MEDIA_SERVERS', 
+			'Use Media Servers');
 
 		$line = Array('PS_CIPHER_ALGORITHM', 'Cipher (0=blowfish, 1=rijndael)');
 
@@ -187,7 +268,7 @@ class PS_CLI_CORE {
 			return false;
 		}
 
-		if ($depth <= 0) {
+		if ($cacheFSDepth <= 0) {
 			echo "Error, depth must be superior to 0\n";
 			return false;
 		}
@@ -200,10 +281,16 @@ class PS_CLI_CORE {
 			$new_settings
 		);
 
+		if($cache = 'default') {
+			$cache = _PS_CACHING_SYSTEM_;
+		}
+
+		echo "Enabling $cache cache system\n";
+
 		switch($cache) {
 			case 'CacheMemcache':
 				if (! extension_loaded('memcache') ) {
-					echo "PHP memcache PECL extension is not loaded\n";
+					echo "Error: PHP memcache PECL extension is not loaded\n";
 					return false;
 				}
 
@@ -211,7 +298,7 @@ class PS_CLI_CORE {
 
 			case 'CacheApc':
 				if (! extension_loaded('apc') ) {
-					echo "PHP APC PECL extension is not loaded\n";
+					echo "Error: PHP APC PECL extension is not loaded\n";
 					return false;
 				}
 
@@ -219,7 +306,7 @@ class PS_CLI_CORE {
 
 			case 'CacheXcache':
 				if (! extension_loaded('xcache') ) {
-					echo "PHP Xcache extension not loaded\n";
+					echo "Error: PHP Xcache extension not loaded\n";
 					return false;
 				}
 
@@ -233,7 +320,7 @@ class PS_CLI_CORE {
 					}
 				}
 				elseif (! is_writeable(_PS_CACHEFS_DIRECTORY_) ) {
-					echo "Cache directory is not writeable\n";
+					echo "Error: Cache directory is not writeable\n";
 					return false;
 				}
 
@@ -275,73 +362,6 @@ class PS_CLI_CORE {
 
 	}
 
-	public static function smarty_template_compilation($compil) {
-
-		$currentConfig = Configuration::getGlobalValue('PS_SMARTY_FORCE_COMPILE');
-
-		switch($compil) {
-			case 'never':
-				if($currentConfig == _PS_SMARTY_NO_COMPILE_) {
-					echo "Already set up\n";
-					return true;
-				}
-				else {
-					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_NO_COMPILE_)) {
-						echo "Successfully updated\n";
-						return true;
-					}
-					else {
-						echo "Error, could not update configuration\n";
-						return false;
-					}
-				}
-
-				break;
-
-			case 'updated':
-
-				if($currentConfig == _PS_SMARTY_CHECK_COMPILE_) {
-					echo "Already set up\n";
-					return true;
-				}
-				else {
-					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_CHECK_COMPILE_)) {
-						echo "Successfully updated\n";
-						return true;
-					}
-					else {
-						echo "Error, could not update configuration\n";
-						return false;
-					}
-				}
-
-				break;
-
-			case 'allways':
-
-				if($currentConfig == _PS_SMARTY_FORCE_COMPILE_) {
-					echo "Already set up\n";
-					return true;
-				}
-				else {
-					if(Configuration::updateGlobalValue('PS_SMARTY_FORCE_COMPILE', _PS_SMARTY_FORCE_COMPILE_)) {
-						echo "Successfully updated\n";
-						return true;
-					}
-					else {
-						echo "Error, could not update configuration\n";
-						return false;
-					}
-				}
-
-				break;
-
-			default:
-				echo "parameter error\n";
-				return false;
-		}
-	}
-
 	// we should not load core before loading this
 	public static function upgrade_core() {
 		//todo: rewrite with new path vars
@@ -359,6 +379,11 @@ class PS_CLI_CORE {
 	}
 
 	public static function print_server_info() {
+		$context = Context::getContext();
+
+
+		$params_optional_results = ConfigurationTest::check(ConfigurationTest::getDefaultTestsOp());
+
 		$table = new Cli\Table();
 
 		$table->addRow(Array(
@@ -402,6 +427,16 @@ class PS_CLI_CORE {
 			_PS_VERSION_
 			)
 		);
+
+		$table->addRow(Array(
+			'Shop base URL',
+			$context->shop->getBaseURL()
+			)
+		);
+
+		foreach ($params_optional_results as $key => $value) {
+			$table->addRow(Array($key, $value));
+		}
 
 		$table->display();
 	}

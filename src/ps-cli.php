@@ -22,7 +22,7 @@ require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_shops.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_profile.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_cms.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_images.php');
-require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_url.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_seo.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_multistore.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_import.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_ccc.php');
@@ -62,11 +62,11 @@ $conf->postload_configure();
 
 //find what to run
 $arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
-$arguments->runArgCommand();
-
-// init context, etc...
-//PS_CLI_UTILS::ps_cli_initialize();
-
-//PS_CLI_UTILS::parse_arguments();
+try {
+	$arguments->runArgCommand();
+}
+catch (PrestaShopException $e) {
+	echo "Error from PrestaShop core: ".$e->getMessage() . "\n";
+}
 
 ?>

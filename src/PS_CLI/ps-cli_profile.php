@@ -68,7 +68,7 @@ class PS_CLI_PROFILE {
 
 		$accesses = Profile::getProfileAccesses($profileId, 'id_tab');
 
-		echo "Access rights for profile $profile->name ($profileId)\n";
+		echo "Access rights for profile ".array_pop($profile->name)." ($profileId)\n";
 
 		$table = new Cli\Table();
 		$table->setHeaders( Array(
@@ -97,7 +97,5 @@ class PS_CLI_PROFILE {
 		}
 
 		$table->display();
-
-		print_r($profile->name);
 	}
 }

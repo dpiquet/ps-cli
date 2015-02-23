@@ -20,8 +20,6 @@ class PS_CLI_EMPLOYEE {
 		}
 
 		$profiles = Profile::getProfiles($lang);
-		$fieldSeparator = ' ';
-		$lineSeparator = "\n";
 
 		$table = new cli\Table();
 		$table->setHeaders( Array(
@@ -29,7 +27,8 @@ class PS_CLI_EMPLOYEE {
 			'email',
 			'profile',
 			'First name',
-			'Last name'
+			'Last name',
+			'Active'
 			)
 		);
 
@@ -42,12 +41,17 @@ class PS_CLI_EMPLOYEE {
 
 			foreach ( $employees as $employee ) {
 
+				//print_r($employee);
+
+				$enabled = ($employee['active'] == 1 ? 'Active' : 'Inactive');
+
 				$table->addRow( Array(
 					$employee['id_employee'],
 					$employee['email'],
 					$profile['name'],
 					$employee['firstname'],
-					$employee['lastname']
+					$employee['lastname'],
+					$enabled
 					)
 				);
 			}
@@ -63,10 +67,17 @@ class PS_CLI_EMPLOYEE {
 			return false;
 		}
 
-		$employee = new Employee();
-		if (! $employee->getByEmail($employeeEmail) ) {
-			echo "No account found with email $employeeEmail\n";
-			return false;
+		//getByEmail get only active employees so we have to load all employees and loop'em to find our ID
+		$employeeInfos =  Db::getInstance()->getRow('
+			                SELECT id_employee
+					FROM `'._DB_PREFIX_.'employee`
+					WHERE `email` = \''.pSQL($employeeEmail).'\'');
+
+		$employee = new Employee($employeeInfos['id_employee']);
+		
+		if(!Validate::isLoadedObject($employee)) {
+			echo "Could not load employee !\n";
+			exit(1);
 		}
 
 		if ( ! $force && $employee->isLastAdmin() ) {
@@ -77,7 +88,7 @@ class PS_CLI_EMPLOYEE {
 		$res = $employee->delete();
 
 		if ( $res ) {
-			echo "Successfully deleted user\n";
+			echo "Successfully deleted user $employeeEmail\n";
 			return true;
 		}
 		else {
@@ -88,7 +99,7 @@ class PS_CLI_EMPLOYEE {
 
 	public static function disable_employee($employeeEmail) {
 		if ( !Validate::isEmail($employeeEmail) ) {
-			echo "$email is not a valid email address\n";
+			echo "$employeeEmail is not a valid email address\n";
 			return false;
 		}
 
@@ -99,7 +110,7 @@ class PS_CLI_EMPLOYEE {
 		}
 
 		if ( !$employee->active ) {
-			echo "Employee $email is already inactive\n";
+			echo "Employee $employeeEmail is already inactive\n";
 			return true;
 		}
 
@@ -107,29 +118,38 @@ class PS_CLI_EMPLOYEE {
 
 		$res = $employee->update();
 		if ( $res ) {
-			echo "Employee $email successfully deactivated\n";
+			echo "Employee $employeeEmail successfully deactivated\n";
 			return true;
 		}
 		else {
-			echo "Error while deactivating $email\n";
+			echo "Error while deactivating $employeeEmail\n";
 			return false;
 		}
 	}
 
 	public static function enable_employee($employeeEmail) {
 		if ( !Validate::isEmail($employeeEmail) ) {
-			echo "$email is not a valid email address\n";
+			echo "$employeeEmail is not a valid email address\n";
 			return false;
 		}
 
-		$employee = new Employee();
-		if (! $employee->getByEmail($employeeEmail) ) {
-			echo "Could not find user with email $employeeEmail\n";
-			return false;
+		//getByEmail get only active employees on ps < 1.6.0.12
+		// so we have to load all employees and loop'em to find our ID
+
+		$employeeInfos =  Db::getInstance()->getRow('
+			                SELECT id_employee
+					FROM `'._DB_PREFIX_.'employee`
+					WHERE `email` = \''.pSQL($employeeEmail).'\'');
+
+		$employee = new Employee($employeeInfos['id_employee']);
+		
+		if(!Validate::isLoadedObject($employee)) {
+			echo "Could not load employee !\n";
+			exit(1);
 		}
 
 		if ( $employee->active ) {
-			echo "Employee $email is already active\n";
+			echo "Employee $employeeEmail is already active\n";
 			return true;
 		}
 
@@ -137,14 +157,13 @@ class PS_CLI_EMPLOYEE {
 
 		$res = $employee->update();
 		if ( $res ) {
-			echo "Employee $email successfully activated\n";
+			echo "Employee $employeeEmail successfully activated\n";
 			return true;
 		}
 		else {
-			echo "Error while activating $email\n";
+			echo "Error while activating $employeeEmail\n";
 			return false;
 		}
-
 	}
 
 	public static function add_employee( $email, $password, $profile, $firstName, $lastName, $active=true, $optin=false, $defaultTab=1, $boTheme='default', $boMenu=1 ) {
@@ -163,7 +182,7 @@ class PS_CLI_EMPLOYEE {
 			echo "Provided password is not a valid password\n";
 			return false;
 		}
-
+		
 		if ( $lastName == '' ) {
 			echo "Last name cannot be empty !\n";
 			return false;

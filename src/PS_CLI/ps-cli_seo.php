@@ -1,8 +1,10 @@
 <?php
 
-class PS_CLI_URL {
+class PS_CLI_SEO {
 
-	public static function list_rewritings() {
+	public static function list_metas() {
+
+		$context = Context::getContext();
 
 		$table = new Cli\Table();
 
@@ -10,18 +12,23 @@ class PS_CLI_URL {
 			'id',
 			'page',
 			'title',
-			'url_rewrite'
+			'description',
+			'url_rewrite',
+			'keywords'
 			)
 		);
 
-		$pages = Meta::getMetasByIdLang(PS_CLI_UTILS::$LANG);
+		$metas = Meta::getMetasByIdLang($context->lang->id);
 
-		foreach($pages as $page) {
+		foreach($metas as $meta) {
+
 			$table->addRow(Array(
-				$page['id_meta'],
-				$page['page'],
-				$page['title'],
-				$page['url_rewrite']
+				$meta['id_meta'],
+				$meta['page'],
+				$meta['title'],
+				$meta['description'],
+				$meta['url_rewrite'],
+				$meta['keywords']
 				)
 			);
 		}
@@ -41,13 +48,39 @@ class PS_CLI_URL {
 			)
 		);
 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_REWRITING_SETTINGS', 'Support Url rewriting');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_ALLOW_ACCENTED_CHARS_URL', 'Allow accented in characters in URL');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_CANONICAL_REDIRECT', 'Redirect to canonical URL (0= no redirection, 1= 302, 2 = 301)');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_DISABLE_MULTIVIEWS', 'Disable Apache mutliview');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_HTACCESS_DISABLE_MODSEC', 'Disable Apache mod security');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SHOP_DOMAIN', 'Shop domain');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SHOP_DOMAIN_SSL', 'Shop domain SSL');
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table,
+			'PS_REWRITING_SETTINGS',
+			'Support Url rewriting');
+
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table,
+			'PS_ALLOW_ACCENTED_CHARS_URL',
+			'Allow accented in characters in URL');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table,
+			'PS_CANONICAL_REDIRECT', 
+			'Redirect to canonical URL (0= no redirection, 1= 302, 2 = 301)');
+
+		PS_CLI_UTILS::add_boolean_configuration_status($table, 
+			'PS_HTACCESS_DISABLE_MULTIVIEWS', 
+			'Disable Apache mutliview');
+
+		PS_CLI_UTILS::add_boolean_configuration_status(
+			$table, 
+			'PS_HTACCESS_DISABLE_MODSEC', 
+			'Disable Apache mod security');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table, 
+			'PS_SHOP_DOMAIN', 
+			'Shop domain');
+
+		PS_CLI_UTILS::add_configuration_value(
+			$table, 
+			'PS_SHOP_DOMAIN_SSL', 
+			'Shop domain SSL');
 
 		$context = Context::getContext();
 

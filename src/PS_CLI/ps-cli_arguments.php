@@ -31,12 +31,12 @@ class PS_CLI_ARGUMENTS {
 		$this->_cli = Garden\Cli\Cli::Create()
 			->command('modules')
 				->description('Manage PrestaShop modules')
-				->opt('enable', 'Enable module', false)
-				->opt('disable', 'Disable module', false)
-				->opt('reset', 'Reset module', false)
-				->opt('list', 'List modules', false)
-				->opt('install', 'Install module', false)
-				->opt('uninstall', 'Uninstall module', false)
+				->opt('enable', 'Enable module', false, 'string')
+				->opt('disable', 'Disable module', false, 'string')
+				->opt('reset', 'Reset module', false, 'string')
+				->opt('list', 'List modules', false, 'string')
+				->opt('install', 'Install module', false, 'string')
+				->opt('uninstall', 'Uninstall module', false, 'string')
 				->opt('upgrade', 'Upgrade modules from PrestaShop addons', false)
 				->opt('upgrade-db', 'Run modules database upgrades', false)
 				->opt('show-status', 'Show module configuration', false)
@@ -47,36 +47,36 @@ class PS_CLI_ARGUMENTS {
 				->opt('check-version', 'check for available updates', false)
 				->opt('list-modified-files', 'List modified files', false)
 				->opt('show-info', 'Show server configuration', false)
+				->opt('show-version', 'Show PrestaShop version', false)
 			
 			->command('cache')
 				->description('Manage PrestaShop cache')	
 				->opt('clear-cache', 'Clear smarty cache', false)
 				->opt('show-status', 'show cache configuration', false, 'string')
 				->opt('disable-cache', 'Disable PrestaShop cache', false)
-				->opt('enable-cache', 'Enable PrestaShop cache', false)
+				->opt('enable-cache', 'Enable PrestaShop cache', false, 'string')
 				->opt('cache-depth', 'Set cache depth (default 1)', false, 'integer')
-				->opt('recompile-smarty', 'Set smarty compilation (allways, never, modified)', false, 'string')
 				->arg('<cachetype>', 'Cache to use (fs, memcache, xcache, apc)', false)
 
 			->command('employee')
 				->description('Manage PrestaShop employees')
-				->opt('list', 'List employees', false)
-				->opt('delete', 'Delete an employee', false)
-				->opt('disable', 'Disable an employee', false)
-				->opt('enable', 'Enable an employee', false)
-				->opt('create', 'Create an employee', false)
+				->opt('list', 'List employees', false, 'boolean')
+				->opt('delete', 'Delete an employee', false, 'string')
+				->opt('disable', 'Disable an employee', false, 'string')
+				->opt('enable', 'Enable an employee', false, 'string')
+				->opt('create', 'Create an employee', false, 'string')
 				->arg('<email address>', 'Employee email address', false)
 				->opt('password', 'Employee password', false, 'string')
-				->opt('profile', 'Employee profile', false, 'string')
+				->opt('profile', 'Employee profile', false, 'integer')
 				->opt('first-name', 'Employee first name', false, 'string')
 				->opt('last-name', 'Employee last name', false, 'string')
-				->opt('show-status', 'Show employee configuration', false)
+				->opt('show-status', 'Show employee configuration', false, 'boolean')
 
 			->command('profile')
 				->description('Manage PrestaShop profiles')
 				->opt('list', 'List profiles', false)
-				->opt('delete', 'Delete a profile', false)
-				->opt('list-permissions', 'List a profile permissions', false)
+				->opt('delete', 'Delete a profile', false, 'integer')
+				->opt('list-permissions', 'List a profile permissions', false, 'integer')
 				->arg('<ID>', 'Profile ID', false)
 
 			->command('shop')
@@ -86,7 +86,9 @@ class PS_CLI_ARGUMENTS {
 
 			->command('db')
 				->description('Perform database operations')
-				->opt('backup', 'Create a backup', false)
+				->opt('backup', 'Create a backup', false, 'boolean')
+				->opt('skip-stats', 'Skip stats tables on backup', false, 'boolean')
+				->opt('list', 'List backups', false, 'boolean')
 
 			->command('email')
 				->description('Manage email configuration')
@@ -94,31 +96,38 @@ class PS_CLI_ARGUMENTS {
 
 			->command('theme')
 				->description('Manage PrestaShop themes')
-				->opt('list', 'List themes', false)
-				->opt('list-available', 'List themes', false)
-				->opt('install', 'Install theme', false)
+				->opt('list', 'List themes', false, 'boolean')
+				->opt('list-available', 'List themes', false, 'boolean')
+				->opt('install', 'Install theme', false, 'integer')
 				->arg('theme', 'Theme id', false)
 
 			->command('cms')
 				->description('Manage PrestaShop CMS')
-				->opt('list-categories', 'List categories', false)
-				->opt('list-pages', 'List pages', false)
-				->opt('delete-page', 'Delete page', false)
-				->opt('disable-page', 'Disable a page', false)
-				->opt('enable-page', 'Enable a page', false)
-				->arg('id', 'Category or page ID', false)
+				->opt('list-categories', 'List categories', false, 'boolean')
+				->opt('list-pages', 'List pages', false, 'boolean')
+				->opt('delete-page', 'Delete page', false, 'integer')
+				->opt('disable-page', 'Disable a page', false, 'integer')
+				->opt('enable-page', 'Enable a page', false, 'integer')
+				->opt('enable-category', 'Enable a category', false, 'integer')
+				->opt('disable-category', 'Disable a category', false, 'integer')
+				->opt('create-category', 'Create a category', false, 'boolean')
+				->opt('name', 'Name of the category to create', false, 'string')
+				->opt('parent', 'Id of the parent category', false, 'integer')
+				->opt('link-rewrite', 'Link rewrite', false, 'string')
+				->opt('description', 'Description of the category', false, 'string')
+				->arg('<ID>', 'Category or page ID', false, 'integer')
 
 			->command('image')
 				->description('Manage PrestaShop images')
 				->opt('list', 'List images', false)
 				->opt('regenerate-thumbs', 'Regenerate thumbnails', false)
-				->opt('category', 'Specify images category (all, products, categories, manufacturers, suppliers, scenes, stores', false, 'string')
+				->opt('category', 'Specify images category for thumbnails regeneration (all, products, categories, manufacturers, suppliers, scenes, stores)', false, 'string')
 				->opt('keep-old-images', 'Keep old images', false)
 				->opt('show-status', 'Show configuration', false)
 
-			->command('url')
+			->command('seo')
 				->description('Manage SEO & URL')
-				->opt('list-rewritings', 'List rewriting rules', false)
+				->opt('list-metas', 'List metas tags', false)
 				->opt('show-status', 'Show configuration', false)
 				->opt('base-uri', 'Set shop base URI', false, 'string')
 
@@ -224,6 +233,11 @@ class PS_CLI_ARGUMENTS {
 					false
 				)
 				->opt(
+					'porcelain',
+					'Give porcelain output for scripting',
+					false
+				)
+				->opt(
 					'path',
 					'Specify prestashop install path',
 					false
@@ -279,8 +293,8 @@ class PS_CLI_ARGUMENTS {
 				$this->_parse_image_arguments($this->_arguments);
 				break;
 
-			case 'url':
-				$this->_parse_url_arguments($this->_arguments);
+			case 'seo':
+				$this->_parse_seo_arguments($this->_arguments);
 				break;
 
 			case 'multistore':
@@ -336,7 +350,13 @@ class PS_CLI_ARGUMENTS {
 
 	//parse given arguments
 	public function parse_arguments() {
-		$this->_arguments = $this->_cli->parse($GLOBALS['argv']);
+		try {
+			$this->_arguments = $this->_cli->parse($GLOBALS['argv'], false);
+		}
+		catch (Exception $e) {
+			echo $e->getMessage() . "\n";
+			exit(1);
+		}
 	}
 
 	//argument accessor
@@ -354,8 +374,7 @@ class PS_CLI_ARGUMENTS {
 			echo "$error\n";
 		}
 
-		$schema = $this->_cli->getSchema($command);
-		$this->_cli->writeHelp($schema);
+		$this->_cli->writeHelp($command);
 	}
 
 
@@ -370,10 +389,7 @@ class PS_CLI_ARGUMENTS {
 		}
 		elseif ($cache = $arguments->getOpt('enable-cache', false)) {
 
-			if ($cache === "1") {
-				$this->_show_command_usage('modules');
-				exit(1);
-			}
+			if($cache == "1") { $cache = 'default'; }
 
 			switch($cache) {
 				case 'fs':
@@ -387,6 +403,9 @@ class PS_CLI_ARGUMENTS {
 					break;
 				case 'apc':
 					$cacheType = 'CacheApc';
+					break;
+				case 'default':
+					$cacheType = 'default';
 					break;
 				default:
 					$error = 'Cache type must be fs, memcache, xcache or apc';
@@ -409,9 +428,6 @@ class PS_CLI_ARGUMENTS {
 		elseif ($opt = $arguments->getOpt('clear-cache', false)) {
 			$status = PS_CLI_CORE::clear_smarty_cache();
 		}
-		elseif($smarty = $arguments->getOpt('recompile-smarty', false)) {
-			$status = PS_CLI_CORE::smarty_template_compilation($smarty);
-		}
 		else {
 			$this->_show_command_usage('cache');
 			exit(1);
@@ -422,14 +438,17 @@ class PS_CLI_ARGUMENTS {
 
 	private function _parse_core_arguments(Garden\Cli\Args $arguments) {
 
-		if ($opt = $arguments->getOpt('check-version', false)) {
+		if ($arguments->getOpt('check-version', false)) {
 			PS_CLI_CORE::core_check_version();
 		}
-		elseif ($opt = $arguments->getOpt('list-modified-files', false)) {
+		elseif ($arguments->getOpt('list-modified-files', false)) {
 			PS_CLI_CORE::core_list_changed_files();
 		}
-		elseif($opt = $arguments->getOpt('show-info', false)) {
+		elseif($arguments->getOpt('show-info', false)) {
 			PS_CLI_CORE::print_server_info();
+		}
+		elseif($arguments->getOpt('show-version', false)) {
+			PS_CLI_CORE::core_show_version();
 		}
 		else {
 			$this->_show_command_usage('core');
@@ -589,8 +608,9 @@ class PS_CLI_ARGUMENTS {
 
 		// todo: support for all options (optin, active, defaultTab, ...)
 		elseif ($email = $arguments->getOpt('create', false)) {
-			if ($email === "1") {
-				$this->_show_command_usage('employee');
+
+			if(!Validate::isEmail($email)) {
+				echo "Error, $email is not a valid email address\n";
 				exit(1);
 			}
 
@@ -608,7 +628,6 @@ class PS_CLI_ARGUMENTS {
 
 			$profileError = 'You must provide a profile for the Employee';
 			if ($profile = $arguments->getOpt('profile', false)) {
-				//if($profile === "1") {
 				if(!Validate::isUnsignedInt($profile)) {
 					$this->_show_command_usage('employee', $profileError);
 					exit(1);
@@ -621,7 +640,7 @@ class PS_CLI_ARGUMENTS {
 
 			$firstnameError = 'You must specify a name with --first-name option';
 			if ($firstname = $arguments->getOpt('first-name', false)) {
-				if ($opt === "1") {
+				if($firstname == '') {
 					$this->_show_command_usage('employee', $firstnameError);
 					exit(1);
 				}
@@ -633,7 +652,7 @@ class PS_CLI_ARGUMENTS {
 			
 			$lastnameError = 'You must specify a last name with --last-name option';
 			if($lastname = $arguments->getOpt('last-name', false)) {
-				if($opt === "1") {
+				if($lastname == '') {
 					$this->_show_command_usage('employee', $lastnameError);
 					exit(1);
 				}
@@ -755,23 +774,27 @@ class PS_CLI_ARGUMENTS {
 	}
 
 	private function _parse_db_arguments(Garden\Cli\Args $arguments) {
-		if($opt = $arguments->getOpt('backup', false)) {
-			$ret = PS_CLI_DB::database_create_backup();
-	
-			if ($ret === false) {
-				exit(1);
-			}
-			else {
-				echo "$ret\n";
-				exit(0);
-			}
+
+		if($arguments->getOpt('backup', false)) {
+
+			$skipStats = $arguments->getOpt('skip-stats', false);
+
+			$status = PS_CLI_DB::database_create_backup($skipStats);
+		}
+		elseif($arguments->getOpt('list', false)) {
+			$status = PS_CLI_DB::list_database_backups();
 		}
 		else {
 			$this->_show_command_usage('db');
 			exit(1);
 		}
-		
-		exit(0);
+
+		if($status === false) {
+			exit(1);
+		}
+		else {
+			exit(0);
+		}
 	}
 
 	private function _parse_email_arguments(Garden\Cli\Args $arguments) {
@@ -836,14 +859,28 @@ class PS_CLI_ARGUMENTS {
 			PS_CLI_CMS::list_pages();
 			$status = true;
 		}
-		elseif($opt = $arguments->getOpt('delete-page', false)) {
-			$status = PS_CLI_CMS::delete_page($opt);
+		elseif($pageId = $arguments->getOpt('delete-page', false)) {
+			$status = PS_CLI_CMS::delete_page($pageId);
 		}
 		elseif($pageId = $arguments->getOpt('disable-page', false)) {
 			$status = PS_CLI_CMS::disable_page($pageId);
 		}
 		elseif($pageId = $arguments->getOpt('enable-page', false)) {
 			$status = PS_CLI_CMS::enable_page($pageId);
+		}
+		elseif($catId = $arguments->getOpt('enable-category', false)) {
+			$status = PS_CLI_CMS::enable_category($catId);
+		}
+		elseif($catId = $arguments->getOpt('disable-category', false)) {
+			$status = PS_CLI_CMS::disable_category($catId);
+		}
+		elseif($arguments->getOpt('create-category', false)) {
+			$name = $arguments->getOpt('name', false);
+			$parent = $arguments->getOpt('parent', false);
+			$rewrite = $arguments->getOpt('link-rewrite', false);
+			$description = $arguments->getOpt('description', '');
+
+			$status = PS_CLI_CMS::create_category($parent, $name, $rewrite, $description);
 		}
 		else {
 			$this->_show_command_usage('cms');
@@ -907,22 +944,22 @@ class PS_CLI_ARGUMENTS {
 		exit (0);
 	}
 
-	private function _parse_url_arguments(Garden\Cli\Args $arguments) {
-		if($opt = $arguments->getOpt('list-rewritings', false)) {
-			PS_CLI_URL::list_rewritings();
+	private function _parse_seo_arguments(Garden\Cli\Args $arguments) {
+		if($opt = $arguments->getOpt('list-metas', false)) {
+			PS_CLI_SEO::list_metas();
 		}
 		elseif($arguments->getOpt('show-status', false)) {
-			PS_CLI_URL::show_status();
+			PS_CLI_SEO::show_status();
 		}
 		elseif($baseUri = $arguments->getOpt('base-uri', null)) {
 			if(!Validate::isUrl($baseUri)) {
 				echo "Error: '$baseUri' is not a valid URI\n";
 				exit(1);
 			}
-			$status = PS_CLI_URL::update_base_uri($baseUri);
+			$status = PS_CLI_SEO::update_base_uri($baseUri);
 		}
 		else {
-			$this->_show_command_usage('url');
+			$this->_show_command_usage('seo');
 			exit(1);
 		}
 
@@ -1240,6 +1277,7 @@ class PS_CLI_ARGUMENTS {
                         exit(1);
                 }
 	}
+
 
 }
 

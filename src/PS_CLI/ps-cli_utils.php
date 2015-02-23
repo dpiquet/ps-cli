@@ -178,9 +178,21 @@ class PS_CLI_UTILS {
 		}
 	}
 
-	public static function add_boolean_configuration_status(Cli\Table &$table, $key, $friendlyName) {
+	public static function add_boolean_configuration_status(Cli\Table &$table, $key, $friendlyName, $since = NULL) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		//if since is given and we know we're bellow, skip the value
+		if($since !== NULL) {
+			if(version_compare($since, $configuration->psVersion, '>')) {
+				return;
+			}
+		}
+
 		$line = Array($key, $friendlyName);
-		if(Configuration::get($key)) {
+
+		$value = Configuration::get($key);
+
+		if($value == "1") {
 			array_push($line, 'Enabled');
 		}
 		else {
@@ -190,10 +202,29 @@ class PS_CLI_UTILS {
 		$table->addRow($line);
 	}
 
-	public static function add_configuration_value(Cli\Table &$table, $key, $friendlyName) {
+	public static function add_configuration_value(Cli\Table &$table, $key, $friendlyName, $since = NULL) {
+
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		//if since is given and we know we're bellow, skip the value
+		if($since !== NULL) {
+			if(version_compare($since, $configuration->psVersion, '>')) {
+				return;
+			}
+		}
+
 		$line = Array($key, $friendlyName);
 
 		$value = Configuration::get($key);
+
+		if($value === false) {
+			$value = 'Unsupported on your current prestashop version';
+
+			if($since !== null) {
+				$value .= " (requires $since version)";
+			}
+		}
+
 		array_push($line, $value);
 
 		$table->addRow($line);

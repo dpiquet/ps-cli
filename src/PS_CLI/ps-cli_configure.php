@@ -11,9 +11,13 @@ class PS_CLI_CONFIGURE {
 
 	public $boPath = '.';
 
+	public $psVersion = NULL;
+
 	public $lang;
 
 	public $verbose = false;
+
+	public $porcelain = false;
 
 	public $groupid;
 	public $shopid;
@@ -62,6 +66,14 @@ class PS_CLI_CONFIGURE {
 		if(!$this->boPath) {
 			exit(1);
 		}
+
+		if($arguments->getOpt('porcelain', false)) {
+			$this->porcelain = true;
+		}
+
+		if($arguments->getOpt('verbose', false)) {
+			$this->verbose = true;
+		}
 	}
 
 	// configuration after PrestaShop core loading
@@ -69,6 +81,9 @@ class PS_CLI_CONFIGURE {
 
 		$context = Context::getContext();
 		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+
+		//store PS version for later use
+		$this->psVersion = _PS_VERSION_;
 
 		// language to use
 		if($lng = $arguments->getOpt('lang', false)) {

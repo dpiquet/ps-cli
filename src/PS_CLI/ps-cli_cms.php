@@ -80,11 +80,6 @@ class PS_CLI_CMS {
 		}	
 	}
 
-	public static function create_category($parent, $name, $linkRewrite) {
-		echo "Not implemented\n";
-		return false;
-	}
-
 	public static function list_pages() {
 
 		$context = Context::getContext();
@@ -165,16 +160,16 @@ class PS_CLI_CMS {
 			if($page->active) {
 				$page->active = false;
 				if($page->update()) {
-					echo "Successfully disabled page $page->name\n";
+					echo "Successfully disabled page '$page->meta_title'\n";
 					return true;
 				}
 				else {
-					echo "Error, could not disable page $page->name\n";
+					echo "Error, could not disable page '$page->meta_title'\n";
 					return false;
 				}
 			}
 			else {
-				echo "The page $page->name is already disabled\n";
+				echo "Page '$page->meta_title' is already disabled\n";
 				return true;
 			}
 		}
@@ -196,23 +191,153 @@ class PS_CLI_CMS {
 			if(!$page->active) {
 				$page->active = true;
 				if($page->update()) {
-					echo "Successfully enabled page $page->name\n";
+					echo "Successfully enabled page '$page->meta_title'\n";
 					return true;
 				}
 				else {
-					echo "Error, could not enable page $page->name\n";
+					echo "Error, could not enable page '$page->meta_title'\n";
 					return false;
 				}
 			}
 			else {
-				echo "The page $page->name is already enabled\n";
+				echo "Page '$page->meta_title' is already enabled\n";
 				return true;
 			}
 		}
 		else {
-			echo "Could not find a page with page id $pageId\n";
+			echo "Could not find a page with id $pageId\n";
 			return false;
 		}
+	}
+
+	public static function disable_category($catId) {
+		$category = new CMSCategory($catId);
+
+		if(!Validate::isLoadedObject($category)) {
+			echo "Error, could not find a category with id $catId\n";
+			return false;
+		}
+		
+		if($category->active) {
+			$category->active = false;
+			if($category->update()) {
+				echo "Successfully deactivated category $catagory->name\n";
+				return true;
+			}
+			else {
+				echo "Could not disable category $category->name\n";
+				return false;
+			}
+		}
+		else {
+			echo "Category $category->name is already disabled\n";
+			return true;
+		}
+	}
+
+	public static function enable_category($catId) {
+		$category = new CMSCategory($catId);
+
+		if(!Validate::isLoadedObject($category)) {
+			echo "Error, could not find a category with id $catId\n";
+			return false;
+		}
+		
+		if(!$category->active) {
+			$category->active = true;
+			if($category->update()) {
+				echo "Successfully activated category $catagory->name\n";
+				return true;
+			}
+			else {
+				echo "Could not enable category $category->name\n";
+				return false;
+			}
+		}
+		else {
+			echo "Category $category->name is already active\n";
+			return true;
+		}
+	}
+
+	public static function delete_category($catId) {
+		$category = new CMSCategory($catId);
+
+		if(!Validate::isLoadedObject($category)) {
+			echo "Error, Could not find a category with id $catId\n";
+			return false;
+		}
+
+		if($this->id == 1) {
+			echo "Error, you cannot delete the root category !\n";
+			return false;
+		}
+
+		if($category->delete()) {
+			echo "Successfully deleted category  $category->name and its subcategories\n";
+			return true;
+		}
+		else {
+			echo "Error, could not delete category $category->name\n";
+			return false;
+		}
+	}
+
+	public static function create_category($parent, $name, $linkRewrite, $description = '') {
+
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		$category = new CMSCategory();
+
+		if(!Validate::isUnsignedId($parent)) {
+			echo "Error, $parent is not a valid category ID\n";
+			return false;
+		}
+
+		$parentCat = new CMSCategory($parent);
+		if(!Validate::isloadedObject($parentCat)) {
+			echo "Error: category $parentCat does not exists\n";
+			return false;	
+		}
+
+		$category->id_parent = $parent;
+
+		if(!Validate::isName($name)) {
+			echo "Error, $name is not a valid category name\n";
+			return false;
+		}
+
+		$category->name = Array($configuration->lang => $name);
+
+
+		if(!Validate::isLinkRewrite($linkRewrite)) {
+			echo "Error, $linkRewrite is not a valid link rewrite\n";
+			return false;
+		}
+
+		$category->link_rewrite = Array($configuration->lang => $linkRewrite);
+
+		if(!Validate::isCleanHtml($description)) {
+			echo "Warning, $description is not a valid category description\n";
+			$description = '';
+		}
+
+		$category->description = Array($configuration->lang => $description);
+
+		if($category->add()) {
+			if($configuration->porcelain) {
+				echo $category->id_cms_category;
+			}
+			else {
+				echo "Successfully created category $category->id_cms_category\n";
+			}
+
+			return true;
+		}
+		else {
+			echo "Error, could not create category $name\n";
+			return false;
+		}	
 	}
 
 }
