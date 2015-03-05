@@ -45,7 +45,7 @@ class PS_CLI_MODULES {
 				else {
 					if ( $module->uninstall() ) {
 						if ( $module->install() ) {
-							echo "Module $moduleName successfully reset (uninstalled and reinstalled\n";
+							echo "Module $moduleName successfully reset (uninstalled and reinstalled)\n";
 							return true;
 						}
 						else {
@@ -96,6 +96,7 @@ class PS_CLI_MODULES {
 
 	public static function install_module($moduleName) {
 
+		// module getInstanceByName take from db; if not installed, it's not in db
 		if ( $module = Module::getInstanceByName($moduleName) ) {
 			if ( Module::isInstalled($moduleName) ) {
 				echo "module $moduleName is already installed\n";
@@ -184,49 +185,11 @@ class PS_CLI_MODULES {
 		}
 	}
 
-	public static function print_module_list($status = 'all') {
+	public static function print_module_list($status = 'all', $onDiskOnly = true) {
 		$_GET['controller'] = 'AdminModules';
 		$_GET['tab'] = 'AdminModules';
 
 		$modulesOnDisk = Module::getModulesOnDisk();
-		/**
-
-		modules on disk Objects Structure
-			id
-			warning
-			name
-			version
-			tab
-			displayName
-			description
-			author
-			limited_countries (Array)
-			parent_class
-			is_configurable
-			need_instance
-			active
-			trusted
-			currencies
-			currencies_mode
-			confirmUninstall
-			description_full
-			additional_description
-			compatibility
-			nb_rates
-			avg_rates
-			badges
-			url
-			onclick_option
-			version_addons (SimpleXMLElement Object)
-			installed
-			database_version
-			interest
-			enable_device
-
-			methods:
-			- 
-			
-		**/
 
 		switch($status) {
 
@@ -242,8 +205,13 @@ class PS_CLI_MODULES {
 				);
 
 				foreach( $modulesOnDisk as $module ) {
-					$module->installed ? $iStat = 'Yes' : $iStat = 'No';
-					$module->active ? $aStat = 'Yes' : $aStat = 'No';
+
+					if($onDiskOnly && isset($module->not_on_disk)) {
+						continue;
+					}
+
+					Module::isInstalled($module->name) ? $iStat = 'Yes' : $iStat = 'No';
+					Module::isEnabled($module->name) ? $aStat = 'Yes' : $aStat = 'No';
 
 					// check for updates
 					if (isset($module->version_addons) && $module->version_addons) {
@@ -387,7 +355,8 @@ class PS_CLI_MODULES {
 	}
 
 	//todo manage loggedOnAddons
-	private static function _download_module_archive($module) {
+	// param $module is a module object from addonsRequest (xml object ?)
+	private static function _download_module_archive(SimpleXMLElement $module) {
 
 		if (file_exists(_PS_MODULE_DIR_.$module->name.'.zip')) {
 			unlink(_PS_MODULE_DIR_.$module->name.'.zip');
@@ -468,6 +437,47 @@ class PS_CLI_MODULES {
 		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PRESTASTORE_LIVE', 'Automatically check modules updates');
 
 		$table->display();
+	}
+
+	// download (and extract ?) module
+	public static function download_install_module($moduleName) {
+		
+		$raw = Tools::file_get_contents(_PS_ROOT_DIR_.Module::CACHE_FILE_DEFAULT_COUNTRY_MODULES_LIST);
+		$xmlModuleLists[] = @simplexml_load_string($raw, null, LIBXML_NOCDATA);
+
+                $moduleStore = NULL;
+
+                foreach($xmlModuleLists as $xmlModuleList) {
+			foreach ($xmlModuleList->module as $km) {
+
+				if($km->name != $moduleName) {
+					continue;
+				}
+
+				$moduleStore = $km;
+			}
+		}
+
+		if(is_null($moduleStore)) {
+			echo "Error, could not find $moduleName in addons store...\n";
+			return false;
+		}
+
+		if(! $moduleArchive = self::_download_module_archive($moduleStore)) {
+			echo "Error, could not download module\n";
+			return false;
+		}
+
+		 if (! Tools::ZipExtract($moduleArchive, _PS_MODULE_DIR_)) {
+			 echo "Could not extract $module->name archive\n";
+			 return false;
+		 }
+
+		@unlink($moduleArchive);
+
+		echo "Sucessfully downloaded module $moduleName\n";
+
+		return true;
 	}
 }
 

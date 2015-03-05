@@ -51,11 +51,113 @@ class PS_CLI_SEARCH {
 				$alias['id_alias'],
 				$alias['alias'],
 				$alias['search'],
-				$alias['active']
+				($alias['active'] ? 'yes' : 'no')
 				)
 			);	
 		}
 
 		$table->display();
+	}
+
+	public static function add_alias($alias, $search) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		if(!Validate::isValidSearch($alias)) {
+			echo "Error, $alias is not a valid search string\n";
+			return false;
+		}
+
+		if(!Validate::isValidSearch($search)) {
+			echo "Error, $search is not a valid search string\n";
+			return false;
+		}
+
+		$obj = new Alias(NULL, trim($alias), trim($search));
+		if($obj->save()) {
+			if($configuration->porcelain) {
+				echo "$obj->id\n";
+			}
+			else {
+				echo "Successfully added alias $alias => $search\n";
+			}
+			return true;
+		}
+		else {
+			echo "Error, could not add alias $alias => $search !\n";
+			return false;
+		}
+	}
+
+	public static function delete_alias($aliasId) {
+		if(!Validate::isUnsignedId($aliasId)) {
+			echo "Error, $aliasId is not a valid alias ID\n";
+			return false;
+		}
+
+		$alias = new Alias($aliasId);
+
+		if(!Validate::isLoadedObject($alias)) {
+			echo "No alias found with id $aliasId\n";
+			return false;
+		}
+
+		if($alias->delete()) {
+			echo "Sucessfully deleted alias $alias->alias => $alias->search\n";
+			return true;
+		}
+		else {
+			echo "Error, could not delete alias $alias->alias => $alias->search\n";
+			return false;
+		}
+	}
+
+	public static function enable_alias($aliasId) {
+		if(!Validate::isUnsignedId($aliasId)) {
+			echo "Error, $aliasId is not a valid alias ID\n";
+			return false;
+		}
+
+		$alias = new Alias($aliasId);
+
+		if($alias->active) {
+			echo "alias $aliasId is already enabled\n";
+			return true;
+		}
+
+		$alias->active = true;
+
+		if($alias->save()) {
+			echo "Sucessfully enabled alias $aliasId\n";
+			return true;
+		}
+		else {
+			echo "Could not enable alias $aliasId\n";
+			return false;
+		}
+	}
+
+	public static function disable_alias($aliasId) {
+		if(!Validate::isUnsignedId($aliasId)) {
+			echo "Error, $aliasId is not a valid alias ID\n";
+			return false;
+		}
+
+		$alias = new Alias($aliasId);
+
+		if(!$alias->active) {
+			echo "alias $aliasId is already disabled\n";
+			return true;
+		}
+
+		$alias->active = false;
+
+		if($alias->save()) {
+			echo "Sucessfully disabled alias $aliasId\n";
+			return true;
+		}
+		else {
+			echo "Could not disable alias $aliasId\n";
+			return false;
+		}
 	}
 }

@@ -60,13 +60,36 @@ PS_CLI_UTILS::ps_cli_load_ps_core();
 
 $conf->postload_configure();
 
+$interface = PS_CLI_INTERFACE::getInterface();
+
+// todo: create a runner and export this code in it; we'll need to create an interface instance before
 //find what to run
 $arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
 try {
 	$arguments->runArgCommand();
 }
-catch (PrestaShopException $e) {
-	echo "Error from PrestaShop core: ".$e->getMessage() . "\n";
+catch (Exception $e) {
+	//echo "Got generic error from PrestaShop: ".$e->getMessage() ."\n";
+	$interface->add_exception($e);
 }
+catch (PrestaShopException $e) {
+	//echo "Error from PrestaShop core: ".$e->getMessage() . "\n";
+	$interface->add_exception($e);
+}
+catch (PrestaShopDatabaseException $e) {
+	//echo "Error from PrestaShop database: ".$e->getMessage() ."\n";
+	$interface->add_exception($e);
+}
+catch (PrestaShopModuleException $e) {
+	//echo "Error from PrestaShop module: ".$e->getMessage() . "\n";
+	$interface->add_exception($e);
+}
+catch (PrestaShopPaymentException $e) {
+	//echo "Error from PrestaShop payment: ".$e->getMessage() ."\n";
+	$interface->add_exception($e);
+}
+
+$interface->display();
+$interface->exit_program();
 
 ?>

@@ -211,56 +211,63 @@ class PS_CLI_CMS {
 	}
 
 	public static function disable_category($catId) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 		$category = new CMSCategory($catId);
 
 		if(!Validate::isLoadedObject($category)) {
 			echo "Error, could not find a category with id $catId\n";
 			return false;
 		}
+
+		$categoryName = $category->name[$configuration->lang];
 		
 		if($category->active) {
 			$category->active = false;
 			if($category->update()) {
-				echo "Successfully deactivated category $catagory->name\n";
+				echo "Successfully deactivated category $categoryName\n";
 				return true;
 			}
 			else {
-				echo "Could not disable category $category->name\n";
+				echo "Could not disable category $categoryName\n";
 				return false;
 			}
 		}
 		else {
-			echo "Category $category->name is already disabled\n";
+			echo "Category $categoryName is already disabled\n";
 			return true;
 		}
 	}
 
 	public static function enable_category($catId) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 		$category = new CMSCategory($catId);
 
 		if(!Validate::isLoadedObject($category)) {
 			echo "Error, could not find a category with id $catId\n";
 			return false;
 		}
+
+		$categoryName = $category->name[$configuration->lang];
 		
 		if(!$category->active) {
 			$category->active = true;
 			if($category->update()) {
-				echo "Successfully activated category $catagory->name\n";
+				echo "Successfully activated category $categoryName\n";
 				return true;
 			}
 			else {
-				echo "Could not enable category $category->name\n";
+				echo "Could not enable category $categoryName\n";
 				return false;
 			}
 		}
 		else {
-			echo "Category $category->name is already active\n";
+			echo "Category $categoryName is already active\n";
 			return true;
 		}
 	}
 
 	public static function delete_category($catId) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 		$category = new CMSCategory($catId);
 
 		if(!Validate::isLoadedObject($category)) {
@@ -268,22 +275,24 @@ class PS_CLI_CMS {
 			return false;
 		}
 
-		if($this->id == 1) {
+		$categoryName = $category->name[$configuration->lang];
+
+		if($catId == 1) {
 			echo "Error, you cannot delete the root category !\n";
 			return false;
 		}
 
 		if($category->delete()) {
-			echo "Successfully deleted category  $category->name and its subcategories\n";
+			echo "Successfully deleted category $categoryName and its subcategories\n";
 			return true;
 		}
 		else {
-			echo "Error, could not delete category $category->name\n";
+			echo "Error, could not delete category $categoryName\n";
 			return false;
 		}
 	}
 
-	public static function create_category($parent, $name, $linkRewrite, $description = '') {
+	public static function create_category($parent, $name, $linkRewrite, $description = '', $meta_title = '', $meta_description = '', $meta_keywords = '') {
 
 		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 
@@ -299,14 +308,12 @@ class PS_CLI_CMS {
 			echo "Error: category $parentCat does not exists\n";
 			return false;	
 		}
-
 		$category->id_parent = $parent;
 
 		if(!Validate::isName($name)) {
 			echo "Error, $name is not a valid category name\n";
 			return false;
 		}
-
 		$category->name = Array($configuration->lang => $name);
 
 
@@ -314,15 +321,31 @@ class PS_CLI_CMS {
 			echo "Error, $linkRewrite is not a valid link rewrite\n";
 			return false;
 		}
-
 		$category->link_rewrite = Array($configuration->lang => $linkRewrite);
 
 		if(!Validate::isCleanHtml($description)) {
 			echo "Warning, $description is not a valid category description\n";
 			$description = '';
 		}
-
 		$category->description = Array($configuration->lang => $description);
+
+		if(!Validate::isGenericName($meta_title)) {
+			echo "Warning, $meta_title is not a valid value for meta_title\n";
+			$meta_title = '';
+		}
+		$category->meta_title = Array($configuration->lang => $meta_title);
+
+		if(!Validate::isGenericName($meta_description)) {
+			echo "Warning, $meta_description is not a valid value for meta_description\n";
+			$meta_description = '';
+		}
+		$category->meta_description = Array($configuration->lang => $meta_description);
+
+		if(!Validate::isGenericName($meta_keywords)) {
+			echo "Warning, $meta_keywords is not a valid value for meta_keywords\n";
+			$meta_keywords = '';
+		}
+		$category->meta_keywords = Array($configuration->lang => $meta_keywords);
 
 		if($category->add()) {
 			if($configuration->porcelain) {
@@ -339,7 +362,6 @@ class PS_CLI_CMS {
 			return false;
 		}	
 	}
-
 }
 
 ?>

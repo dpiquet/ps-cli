@@ -39,6 +39,7 @@ class PS_CLI_ARGUMENTS {
 				->opt('uninstall', 'Uninstall module', false, 'string')
 				->opt('upgrade', 'Upgrade modules from PrestaShop addons', false)
 				->opt('upgrade-db', 'Run modules database upgrades', false)
+				->opt('download', 'Download a module', false, 'string')
 				->opt('show-status', 'Show module configuration', false)
 				->arg('<modulename>', 'The module to activate', true)
 
@@ -96,9 +97,10 @@ class PS_CLI_ARGUMENTS {
 
 			->command('theme')
 				->description('Manage PrestaShop themes')
-				->opt('list', 'List themes', false, 'boolean')
-				->opt('list-available', 'List themes', false, 'boolean')
-				->opt('install', 'Install theme', false, 'integer')
+				->opt('list', 'List installed themes', false, 'boolean')
+				->opt('list-available', 'List available themes', false, 'boolean')
+				->opt('install-zip', 'Install theme from Zip archive', false, 'string')
+				->opt('activate', 'Install theme', false, 'integer')
 				->arg('theme', 'Theme id', false)
 
 			->command('cms')
@@ -111,9 +113,13 @@ class PS_CLI_ARGUMENTS {
 				->opt('enable-category', 'Enable a category', false, 'integer')
 				->opt('disable-category', 'Disable a category', false, 'integer')
 				->opt('create-category', 'Create a category', false, 'boolean')
+				->opt('delete-category', 'Delete a category', false, 'integer')
 				->opt('name', 'Name of the category to create', false, 'string')
 				->opt('parent', 'Id of the parent category', false, 'integer')
 				->opt('link-rewrite', 'Link rewrite', false, 'string')
+				->opt('meta_title', 'Meta title', false, 'string')
+				->opt('meta_description', 'Meta description', false, 'string')
+				->opt('meta_keywords', 'Meta keywords', false, 'string')
 				->opt('description', 'Description of the category', false, 'string')
 				->arg('<ID>', 'Category or page ID', false, 'integer')
 
@@ -183,6 +189,12 @@ class PS_CLI_ARGUMENTS {
 				->description('PrestaShop search preferences')
 				->opt('show-status', 'Show current search configuration', false)
 				->opt('list-aliases', 'List search aliases', false)
+				->opt('add-alias', 'Add a search alias', false)
+				->opt('alias', 'Alias to define', false, 'string')
+				->opt('search', 'Search keyword', false, 'string')
+				->opt('delete-alias', 'Delete an alias', false, 'integer')
+				->opt('enable-alias', 'Enable an alias', false, 'integer')
+				->opt('disable-alias', 'Disable an alias', false, 'integer')
 
 			->command('localization')
 				->description('Manage PrestaShop localizations')
@@ -465,7 +477,7 @@ class PS_CLI_ARGUMENTS {
 		//TODO: check modulename was given, print a message otherwise
 		// maybe add an else die smth ?
 		if ($opt = $arguments->getOpt('enable', false)) {
-			if ($otp === "1") {
+			if ($opt === "1") {
 				$this->_show_command_usage('modules');
 				exit(1);
 			}
@@ -481,7 +493,7 @@ class PS_CLI_ARGUMENTS {
 			$status = PS_CLI_MODULES::disable_module($opt);
 		}
 		elseif ($opt = $arguments->getOpt('reset', false)) {
-			if ($otp === "1") {
+			if ($opt === "1") {
 				$this->_show_command_usage('modules');
 				exit(1);
 			}
@@ -489,7 +501,7 @@ class PS_CLI_ARGUMENTS {
 			$status = PS_CLI_MODULES::reset_module($opt);
 		}
 		elseif ($opt = $arguments->getOpt('install', false)) {
-			if ($otp === "1") {
+			if ($opt === "1") {
 				$this->_show_command_usage('modules');
 				exit(1);
 			}
@@ -515,6 +527,9 @@ class PS_CLI_ARGUMENTS {
 		}
 		elseif ($opt = $arguments->getOpt('upgrade-db', false)) {
 			$status = PS_CLI_MODULES::upgrade_all_modules_database();
+		}
+		elseif($moduleName = $arguments->getOpt('download', false)) {
+			$status = PS_CLI_MODULES::download_install_module($moduleName);
 		}
 		elseif ($opt = $arguments->getOpt('enable-overrides', false)) {
 			$successMsg = 'modules overrides enabled';
@@ -819,11 +834,14 @@ class PS_CLI_ARGUMENTS {
 			PS_CLI_THEMES::print_available_themes();
 			exit(0);
 		}
-		elseif($theme = $arguments->getOpt('install', false)) {
+		elseif($theme = $arguments->getOpt('activate', false)) {
 
-			PS_CLI_THEMES::install_theme($theme);
+			PS_CLI_THEMES::activate_theme($theme);
 
 			exit(0);
+		}
+		elseif($zip = $arguments->getOpt('install-zip', false)) {
+			PS_CLI_THEMES::install_theme_zip($zip);
 		}
 		else {
 			$this->_show_command_usage('theme');
@@ -879,8 +897,21 @@ class PS_CLI_ARGUMENTS {
 			$parent = $arguments->getOpt('parent', false);
 			$rewrite = $arguments->getOpt('link-rewrite', false);
 			$description = $arguments->getOpt('description', '');
+			$meta_title = $arguments->getOpt('meta_title', '');
+			$meta_description = $arguments->getOpt('meta_description', '');
+			$meta_keywords = $arguments->getOpt('meta_keywords', '');
 
-			$status = PS_CLI_CMS::create_category($parent, $name, $rewrite, $description);
+			$status = PS_CLI_CMS::create_category(
+				$parent,
+				$name,
+				$rewrite, 
+				$description, 
+				$meta_title, 
+				$meta_description, 
+				$meta_keywords);
+		}
+		elseif($catId = $arguments->getOpt('delete-category', false)) {
+			$status = PS_CLI_CMS::delete_category($catId);
 		}
 		else {
 			$this->_show_command_usage('cms');
@@ -1171,6 +1202,33 @@ class PS_CLI_ARGUMENTS {
 			PS_CLI_SEARCH::list_aliases();
 			$status = true;
 		}
+		elseif($arguments->getOpt('add-alias', false)) {
+			$alias = $arguments->getOpt('alias', NULL);
+			$search = $arguments->getOpt('search', NULL);
+
+			if(is_null($alias)) {
+				echo "Error, you must specify --alias with a value\n";
+				$this->_show_command_usage('search-preferences');
+				exit(1);
+			}
+
+			if(is_null($search)) {
+				echo "Error, you must specify --search with a value\n";
+				$this->_show_command_usage('search-preferences');
+				exit(1);
+			}
+
+			$status = PS_CLI_SEARCH::add_alias($alias, $search);
+		}
+		elseif($aliasId = $arguments->getOpt('delete-alias', false)) {
+			$status = PS_CLI_SEARCH::delete_alias($aliasId);
+		}
+		elseif($aliasId = $arguments->getOpt('enable-alias', false)) {
+			$status = PS_CLI_SEARCH::enable_alias($aliasId);
+		}
+		elseif($aliasId = $arguments->getOpt('disable-alias', false)) {
+			$status = PS_CLI_SEARCH::disable_alias($aliasId);
+		}
 		else {
 			$this->_show_command_usage('search-preferences');
 			exit(1);
@@ -1277,8 +1335,6 @@ class PS_CLI_ARGUMENTS {
                         exit(1);
                 }
 	}
-
-
 }
 
 ?>

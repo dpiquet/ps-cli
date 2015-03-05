@@ -20,8 +20,10 @@ class PS_CLI_CONFIGURE {
 	public $porcelain = false;
 
 	public $groupid;
+
 	public $shopid;
-	public $global;
+
+	public $global = false;
 
 	// singleton private constructor, get an instance with getConfigurationInstance()
 	private function __construct() {
@@ -126,6 +128,8 @@ class PS_CLI_CONFIGURE {
 		if($arguments->getOpt('global', false)) {
 			$context->shop->id_shop_group = Shop::CONTEXT_ALL;
 			Shop::setContext(Shop::CONTEXT_ALL);
+
+			$this->global = true;
 		}
 
 		if($opt = $arguments->getOpt('groupid', false)) {

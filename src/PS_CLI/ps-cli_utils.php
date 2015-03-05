@@ -178,6 +178,39 @@ class PS_CLI_UTILS {
 		}
 	}
 
+	public static function update_configuration_value($key, $status, $successMsg, $errMsg, $leftMsg) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		if($configuration->global) {
+			$curStatus = Configuration::getGlobalValue($key);
+		}
+		else {
+			$curStatus = Configuration::getValue($key);
+		}
+
+		if($status == $curStatus) {
+			echo "Success: $leftMsg\n";
+			return true;
+		}
+
+		if($configuration->global) {
+			$updated = Configuration::updateGlobalValue($key, $value);
+		}
+		else {
+			$updated = Configuration::updateValue($key, $value);
+		}
+
+		if(Configuration::updateGlobalValue($key, $status)) {
+			echo "Success: $successMsg\n";
+			return true;
+		}
+		else {
+			echo "Error: $errMsg\n";
+			return false;
+		}
+	
+	}
+
 	public static function add_boolean_configuration_status(Cli\Table &$table, $key, $friendlyName, $since = NULL) {
 		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 
