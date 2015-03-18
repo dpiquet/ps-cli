@@ -24,9 +24,7 @@ class PS_CLI_INTERFACE {
 	private static $_instance = NULL;
 
 	// singleton; get an instance with getInterface()
-	private function __construct {
-		ob_start();
-
+	private function __construct() {
 		$this->warnings = Array();
 		$this->errors = Array();
 		$this->exceptions = Array();
@@ -39,7 +37,7 @@ class PS_CLI_INTERFACE {
 			self::$_instance = new PS_CLI_INTERFACE();
 		}
 
-		return self::$_instance();
+		return self::$_instance;
 	}
 
 	public function add_warning($warnMsg) {
@@ -63,13 +61,10 @@ class PS_CLI_INTERFACE {
 	}
 
 	public function exception_quit() {
-		ob_clean();
-
 		foreach ($this->exceptions as $e) {
 			echo "Got exception $e\n";
 		}
 
-		ob_end_flush();
 		exit(self::RET_EXCEPTION);
 	}
 
@@ -83,17 +78,11 @@ class PS_CLI_INTERFACE {
 	}
 
 	public function add_table(Cli\Table $table) {
-		if($table->countRows() > 0) {
-			$lines = $table->getDisplayLines();
-
-			foreach($lines as $line) {
-				$this->buffer .= $line;
-			}
-		}
+		// Cli\Table does not support output buffering at the moment
+		$table->display();
 	}
 
 	public function display() {
-		ob_clean();
 
 		if(!empty($this->exceptions)) {
 			$this->exception_quit();
@@ -101,7 +90,6 @@ class PS_CLI_INTERFACE {
 
 		echo $this->buffer;
 		
-		ob_end_flush();
 	}
 
 	public function exit_program() {

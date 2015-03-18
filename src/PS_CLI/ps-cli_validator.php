@@ -6,10 +6,23 @@
  *
  */
 
+
 class PS_CLI_VALIDATOR {
+
+	private static $_userValidators = [];
 
 	//return boolean
 	public static function validate_configuration_key($key, $value) {
+
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		// check if a user defined check exists for current key
+		if(defined(self::$_pluginValidators[$key])) {
+			//return call_user_func_array(self::$_pluginValidators[$key], Array($value));
+			$configuration->pluginsLoaded[self::$_pluginValidators[$key]]->validate($key, $value);
+		}
+
+
 		switch($key) {
 
 			case 'PS_SMARTY_CONSOLE':
@@ -295,6 +308,14 @@ class PS_CLI_VALIDATOR {
 		$obj = new $class((int)$id);
 
 		return Validate::isLoadedObject($obj);
+	}
+
+	public static function add_validator($key, $pluginClassName) {
+		if(! class_exists($user_func)) {
+			return false;
+		}
+
+		self::$_validators[$key] = $pluginClassName;
 	}
 }
 

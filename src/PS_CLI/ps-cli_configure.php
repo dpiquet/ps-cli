@@ -25,6 +25,11 @@ class PS_CLI_CONFIGURE {
 
 	public $global = false;
 
+	public $pluginDirs = [];
+
+	// associative array pluginName => plugin instance
+	public $pluginsLoaded = [];
+
 	// singleton private constructor, get an instance with getConfigurationInstance()
 	private function __construct() {
 		//empty constructor
@@ -46,7 +51,14 @@ class PS_CLI_CONFIGURE {
 			exit(1);
 		}
 
+		$this->pluginDirs[] = PS_CLI_ROOT . '/plugins';
+
 		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+
+		// configuration done. Load the plugins
+		$this->read_plugin_directories();
+
+		$arguments->parse_arguments();
 
 		$this->allowRoot = $arguments->getOpt('allow-root', false);
 
@@ -76,6 +88,9 @@ class PS_CLI_CONFIGURE {
 		if($arguments->getOpt('verbose', false)) {
 			$this->verbose = true;
 		}
+
+		$this->pluginDirs[] = PS_CLI_ROOT . '/plugins';
+
 	}
 
 	// configuration after PrestaShop core loading
@@ -162,6 +177,7 @@ class PS_CLI_CONFIGURE {
 
 			PS_CLI_SHOPS::set_current_shop_context($opt);
 		}
+
 	}
 
 	public static function find_ps_root($current = NULL) {
@@ -169,13 +185,6 @@ class PS_CLI_CONFIGURE {
 
 		if(is_null($current)) {
 			$current = getcwd();
-		}
-
-		$dir = opendir($current);
-		if(!$dir) {
-			echo "Fatal error: could not read current directory\n";
-			echo "Do you have read access to the filesystem ?\n";
-			return false;
 		}
 
 		$foundConfig = is_dir($current.'/config') && is_file($current.'/config/config.inc.php');
@@ -188,7 +197,8 @@ class PS_CLI_CONFIGURE {
 		else {
 			$parent = dirname($current);
 
-			if($parent == '.') {
+			// todo: works only with linux
+			if($parent == '/') {
 				echo "Could not find prestashop install !\n";
 				return false;
 			}
@@ -223,6 +233,58 @@ class PS_CLI_CONFIGURE {
 
 		echo "Error, could not find admin directory\n";
 		return false;
+	}
+
+	public static function register_plugin($pluginClass) {
+		$configuration = self::getConfigurationInstance();
+		$interface = PS_CLI_INTERFACE::getInterface();
+
+		if(!class_exists($pluginClass)) { return false; }
+
+		$plugin = $pluginClass::getInstance();
+
+		if(is_subclass_of($plugin, 'PSCLI_Plugin')) {
+					
+			$configuration->_register_plugin($plugin);
+
+			return true;
+		}
+		else {
+			$interface->add_warning("Invalid load_plugin call !");
+			return false;
+		}
+
+	}
+
+	private function _register_plugin($plugin) {
+		$this->pluginsLoaded[$plugin->name] = $plugin;
+	}
+
+	public function read_plugin_directories() {
+
+		foreach($this->pluginDirs as $dir) {
+			if($this->verbose) {
+				echo "scanning $dir for plugins\n";
+			}
+
+			$fh = opendir($dir);
+
+			while($cur = readdir($fh)) {
+
+				if(!preg_match('/\.php$/', $cur)) {
+					continue;
+				}
+
+				if(is_file($dir.'/'.$cur) && is_readable($dir.'/'.$cur)) {
+					if($this->verbose) {
+						echo "Loading $cur plugin file\n";
+					}
+					include_once($dir.'/'.$cur);
+				}
+			}
+
+			closedir($fh);
+		}
 	}
 }
 

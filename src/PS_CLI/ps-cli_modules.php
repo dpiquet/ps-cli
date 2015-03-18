@@ -259,8 +259,11 @@ class PS_CLI_MODULES {
 				break;
 		}
 
+		$interface = PS_CLI_INTERFACE::getInterface();
+
 		if($table) {
-			$table->display();
+			//$table->display();
+			$interface->add_table($table);
 		}
 
 		return true;

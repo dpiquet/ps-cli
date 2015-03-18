@@ -12,10 +12,14 @@ class PS_CLI_ARGUMENTS {
 	protected $_cli;
 	private static $instance;
 
+	// associative array command => plugin object instance
+	private $_commands;
+
 	// singleton class, get the instance with getArgumentsInstance()
 	private function __construct() {
 		$this->create_schema();
-		$this->parse_arguments();
+		// do not parse it now as plugin must be able to extend it
+		//$this->parse_arguments();
 	}
 
 	/* get the singleton arguments object */
@@ -251,7 +255,7 @@ class PS_CLI_ARGUMENTS {
 				)
 				->opt(
 					'path',
-					'Specify prestashop install path',
+					'Specify PrestaShop install path',
 					false
 				);
 
@@ -260,6 +264,16 @@ class PS_CLI_ARGUMENTS {
 	// find and run user command
 	public function runArgCommand() {
 		$command = $this->_arguments->getCommand();
+
+		//check if command if handled by a plugin
+		//doing it now allows command overriding
+		if(is_object($this->_commands[$command])) {
+			$runner = $this->_commands[$command]->getInstance();
+
+			return  $runner->run();
+		}
+		
+		//else try ps-cli core
 		switch($command) {
 			case 'modules':
 				$this->_parse_modules_arguments($this->_arguments);
@@ -578,12 +592,14 @@ class PS_CLI_ARGUMENTS {
 			exit(1);
 		}
 
+		$interface = PS_CLI_INTERFACE::getInterface();
 		if ($status === false) {
-			exit(1);
+			$interface->set_ret_val(PS_CLI_INTERFACE::RET_ERR);
 		}
 
 		// functions exits 1 on error
-		exit(0);
+		//exit(0);
+		$interface->set_ret_val(PS_CLI_INTERFACE::RET_OK);
 	}
 
 	private function _parse_employee_arguments(Garden\Cli\Args $arguments) {
@@ -1318,7 +1334,7 @@ class PS_CLI_ARGUMENTS {
 			$errMsg = "Could not update option $key with value $value";
 			$notChanged = "Option $key has already value $value";
 
-			$status = PS_CLI_UTILS::update_global_value($key, $value, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_UTILS::update_configuration_value($key, $value, $successMsg, $errMsg, $notChanged);
 
 			PS_CLI_UTILS::run_post_hooks();
 		}
@@ -1334,6 +1350,33 @@ class PS_CLI_ARGUMENTS {
                 else {
                         exit(1);
                 }
+	}
+
+	public function add_command(PSCLI_Command $command, $handler) {
+		$interface =  PS_CLI_INTERFACE::getInterface();
+
+		if(is_object($handler)) {
+
+			$this->_cli->command($command->name);
+			$this->_cli->description($command->description);
+
+			foreach($command->getOpts() as $opt => $fields) {
+				$this->_cli->opt($opt, $fields['description'], $fields['required'], $fields['type']);
+			}
+
+			foreach($command->getArgs() as $arg => $fields) {
+				$this->_cli->argument($arg, $fields['description'], $fields['required']); 
+			}
+
+			//keep track of who handles what
+			$this->_commands[$command->name] = $handler;
+
+			return true;
+		}
+		else {
+			//$interface->add_warning("Could not add command $command\n");
+			return false;
+		}
 	}
 }
 
