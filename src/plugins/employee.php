@@ -10,7 +10,199 @@
 #	  - disable_employee
 #
 
-class PS_CLI_EMPLOYEE {
+class PS_CLI_Employee extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('employee', 'Manage PrestaShop employees');
+		$command->addOpt('list', 'List employees', false, 'boolean')
+			->addOpt('delete', 'Delete an employee', false, 'string')
+			->addOpt('disable', 'Disable an employee', false, 'string')
+			->addOpt('enable', 'Enable an employee', false, 'string')
+			->addOpt('create', 'Create an employee', false, 'string')
+			->addArg('<email address>', 'Employee email address', false)
+			->addOpt('password', 'Employee password', false, 'string')
+			->addOpt('profile', 'Employee profile', false, 'integer')
+			->addOpt('first-name', 'Employee first name', false, 'string')
+			->addOpt('last-name', 'Employee last name', false, 'string')
+			->addOpt('show-status', 'Show employee configuration', false, 'boolean');
+		$this->register_command($command);
+	}
+
+	// TODO: refactor in plugin
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		$status = null;
+
+		if ($arguments->getOpt('list', false)) {
+			$status = $this->list_employees();
+		}
+		elseif($arguments->getOpt('show-status', false)) {
+			$this->print_employee_options();
+			$status = true;
+		}
+		elseif ($opt = $arguments->getOpt('delete', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('employee');
+				exit(1);
+			}
+			$status = $this->delete_employee($opt);
+		}
+
+		elseif ($opt = $arguments->getOpt('disable', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('employee');
+				exit(1);
+			}
+			$status = $this->disable_employee($opt);
+		}
+
+		elseif ($opt = $arguments->getOpt('enable', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('employee');
+				exit(1);
+			}
+			$status = $this->enable_employee($opt);
+		}
+
+		// todo: support for all options (optin, active, defaultTab, ...)
+		elseif ($email = $arguments->getOpt('create', false)) {
+
+			if(!Validate::isEmail($email)) {
+				echo "Error, $email is not a valid email address\n";
+				exit(1);
+			}
+
+			$pwdError = 'You must provide a password for the employee';
+			if ($password = $arguments->getOpt('password', false)) {
+				if ($password === "1") {
+					$arguments->show_command_usage('employee', $pwdError);
+					exit(1);
+				}
+			}
+			else {
+				$arguments->show_command_usage('employee', $pwdError);
+				exit(1);
+			}
+
+			$profileError = 'You must provide a profile for the Employee';
+			if ($profile = $arguments->getOpt('profile', false)) {
+				if(!Validate::isUnsignedInt($profile)) {
+					$arguments->show_command_usage('employee', $profileError);
+					exit(1);
+				}
+			}
+			else {
+				$arguments->show_command_usage('employee', $profileError);
+				exit(1);
+			}
+
+			$firstnameError = 'You must specify a name with --first-name option';
+			if ($firstname = $arguments->getOpt('first-name', false)) {
+				if($firstname == '') {
+					$arguments->show_command_usage('employee', $firstnameError);
+					exit(1);
+				}
+			}
+			else {
+				$arguments->show_command_usage('employee', $firstnameError);
+				exit(1);
+			}
+			
+			$lastnameError = 'You must specify a last name with --last-name option';
+			if($lastname = $arguments->getOpt('last-name', false)) {
+				if($lastname == '') {
+					$arguments->show_command_usage('employee', $lastnameError);
+					exit(1);
+				}
+			}
+			else {
+				$arguments->show_command_usage('employee', $lastnameError);
+				exit(1);
+			}
+
+			$status = $this->add_employee(
+				$email,
+				$password,
+				$profile,
+				$firstname,
+				$lastname
+			);	
+		}
+		elseif ($email = $arguments->getOpt('edit', false)) {
+	
+			if($email === "1") {
+				echo "You must specify an email address!\n";
+				$arguments->show_command_usage();
+				exit(1);
+			}
+
+			if ($password = $arguments->getOpt('password', false)) {
+				if($password === "1") {
+					echo "You must specify a password with --password option\n";
+					exit(1);
+				}	
+			}
+			else {
+				$password = NULL;
+			}
+
+			if ($profile = $arguments->getOpt('profile', false)) {
+				//usual check === 1 cannot work with int values
+				if (!Validate::isUnsignedInt($profile)) {
+					echo "$profile is not a valid profile id\n";
+					exit(1);
+				}
+			}
+			else {
+				$profile = NULL;
+			}
+
+			if ($firstname = $arguments->getOpt('firstname', false)) {
+				if ($firstname === "1") {
+					echo "You must specify a name with --firstname option\n";
+					exit(1);
+				}
+			}
+			else {	
+				$firstname = NULL;
+			}
+
+			if ($lastname = $arguments->getOpt('lastname', false)) {
+				if ($firstname === "1") {
+					echo "You must specify a name with --lastname option\n";
+					exit(1);
+				}
+			}
+			else {	
+				$lastname = NULL;
+			}
+
+			$res = $this->edit_employee($email, $password, $profile, $firstname, $lastname);
+
+			if ($res) {
+				echo "Employee $email successfully updated\n";
+				exit(0);
+			}
+			else {
+				echo "Error, could not update employee $email\n";
+				exit(1);
+			}
+
+		}
+		else {
+			$arguments->show_command_usage('employee');
+			exit(1);
+		}
+
+		if ($status === false) {
+			exit(1);
+		}
+
+		exit(0);
+
+	}
 
 	public static function list_employees($lang = NULL) {
 
@@ -342,4 +534,5 @@ class PS_CLI_EMPLOYEE {
 
 }
 
+PS_CLI_Configure::register_plugin('PS_CLI_Employee');
 ?>

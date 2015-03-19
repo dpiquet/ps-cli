@@ -1,6 +1,50 @@
 <?php
 
-class PS_CLI_IMPORT {
+class PS_CLI_Import extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('export', 'Export PrestaShop data');
+		$command->addOpt('categories', 'export catalog categories', false)
+			->addOpt('products', 'export products', false)
+			->addOpt('customers', 'export customers', false)
+			->addOpt('manufacturers', 'export manufacturers', false)
+			->addOpt('suppliers', 'export suppliers', false)
+			->addOpt('orders', 'export orders', false)
+			->addOpt('csv', 'export in CSV format', false)
+			->addArg('data', 'Data to export (categories, products, manufacturers, suppliers, scenes, stores)', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if($opt = $arguments->getOpt('categories', false)) {
+			$this->csv_export('categories');
+		}
+		elseif($opt = $arguments->getOpt('products', false)) {
+			$this->csv_export('products');
+		}
+		elseif($opt = $arguments->getOpt('customers', false)) {
+			$this->csv_export('customers');
+		}
+		elseif($opt = $arguments->getOpt('manufacturers', false)) {
+			$this->csv_export('manufacturers');
+		}
+		elseif($opt = $arguments->getOpt('suppliers', false)) {
+			$this->csv_export('suppliers');
+		}
+		elseif($opt = $arguments->getOpt('orders', false)) {
+			$this->csv_export('orders');
+		}
+		else {
+			$arguments->show_command_usage('export');
+			exit(1);
+		}
+
+		exit(0);
+	}
 
 	public static function csv_import($type, $file) {
 
@@ -459,5 +503,7 @@ class PS_CLI_IMPORT {
 		return $content;
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Import');
 
 ?>

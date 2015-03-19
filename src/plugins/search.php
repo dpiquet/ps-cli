@@ -1,7 +1,73 @@
 <?php
 
-class PS_CLI_SEARCH {
-	
+class PS_CLI_Search extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('search-preferences', 'PrestaShop search preferences');
+		$command->addOpt('show-status', 'Show current search configuration', false)
+			->addOpt('list-aliases', 'List search aliases', false)
+			->addOpt('add-alias', 'Add a search alias', false)
+			->addOpt('alias', 'Alias to define', false, 'string')
+			->addOpt('search', 'Search keyword', false, 'string')
+			->addOpt('delete-alias', 'Delete an alias', false, 'integer')
+			->addOpt('enable-alias', 'Enable an alias', false, 'integer')
+			->addOpt('disable-alias', 'Disable an alias', false, 'integer');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+			$status = true;
+		}
+		elseif($arguments->getOpt('list-aliases', false)) {
+			$this->list_aliases();
+			$status = true;
+		}
+		elseif($arguments->getOpt('add-alias', false)) {
+			$alias = $arguments->getOpt('alias', NULL);
+			$search = $arguments->getOpt('search', NULL);
+
+			if(is_null($alias)) {
+				echo "Error, you must specify --alias with a value\n";
+				$arguments->show_command_usage('search-preferences');
+				exit(1);
+			}
+
+			if(is_null($search)) {
+				echo "Error, you must specify --search with a value\n";
+				$arguments->show_command_usage('search-preferences');
+				exit(1);
+			}
+
+			$status = $this->add_alias($alias, $search);
+		}
+		elseif($aliasId = $arguments->getOpt('delete-alias', false)) {
+			$status = $this->delete_alias($aliasId);
+		}
+		elseif($aliasId = $arguments->getOpt('enable-alias', false)) {
+			$status = $this->enable_alias($aliasId);
+		}
+		elseif($aliasId = $arguments->getOpt('disable-alias', false)) {
+			$status = $this->disable_alias($aliasId);
+		}
+		else {
+			$arguments->show_command_usage('search-preferences');
+			exit(1);
+		}
+
+		if($status) {
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
+
 	public static function show_status() {
 		$table = new Cli\Table();
 
@@ -161,3 +227,5 @@ class PS_CLI_SEARCH {
 		}
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Search');

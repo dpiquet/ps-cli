@@ -1,6 +1,34 @@
 <?php
 
-class PS_CLI_PREFERENCES {
+class PS_CLI_Preferences extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('preferences', 'Set up PrestaShop preferences');
+		$command->addOpt('show-status', 'Show preferences configuration');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->show_preferences_status();
+			$status = true;
+		}
+		else {
+			$arguments->show_command_usage('preferences');
+			exit(1);
+		}
+
+		if($status) {
+			exit(0);
+		}
+		else {
+			exit(1);
+		}
+	}
 
 	public static function show_preferences_status() {
 		$table = new Cli\Table();
@@ -77,7 +105,8 @@ class PS_CLI_PREFERENCES {
 
 		$table->display();
 	}
-
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Preferences');
 
 ?>

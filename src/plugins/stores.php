@@ -1,6 +1,33 @@
 <?php
 
-class PS_CLI_STORES {
+class PS_CLI_Stores extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('store', 'manage stores');
+		$command->addOpt('show-status', 'Show configuration');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status')) {
+			$this->show_status();
+			$status = true;
+		}
+		else {
+			$arguments->show_command_usage('store');
+			exit(1);
+		}
+
+		if($status) {
+			exit(0);
+		}
+		else {
+			exit(1);
+		}
+	}
 
 	public static function show_status() {
 
@@ -33,8 +60,8 @@ class PS_CLI_STORES {
 		
 		return;
 	}
-
-
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Stores');
 
 ?>

@@ -1,6 +1,30 @@
 <?php
 
-class PS_CLI_CUSTOMER_PREFERENCES {
+class PS_CLI_CustomerPreferences extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('customer-preferences', 'PrestaShop customers preferences');
+		$command->addOpt('show-status', 'Show current customer preferences', false);
+
+		$this->register_command($command);	
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+			$status = true;
+		}
+		else {
+			$arguments->show_command_usage('customer-preferences');
+			exit(1);
+		}
+
+		if($status) { exit(0); }
+		else { exit(1); }
+
+	}
 
 	public static function show_status() {
 		$table = new Cli\Table();
@@ -22,7 +46,8 @@ class PS_CLI_CUSTOMER_PREFERENCES {
 		$table->display();
 
 	}
-
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_CustomerPreferences');
 
 ?>

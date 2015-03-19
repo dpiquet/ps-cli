@@ -1,6 +1,72 @@
 <?php
 
-class PS_CLI_MULTISTORE {
+class PS_CLI_Multistore extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('multistore', 'Perform Multistore operations');
+		$command->addOpt('list-shops', 'List shops', false)
+			->addOpt('list-groups', 'List shop groups', false)
+			->addOpt('create-group', 'Create a shop group', false)
+			->addOpt('enable-multistore', 'Enable multistore feature', false)
+			->addOpt('disable-multistore', 'Disable multistore feature', false)
+			->addOpt('active', '', false)
+			->addOpt('share-customers', 'share customers', false, 'boolean')
+			->addOpt('share-orders', 'share orders', false, 'boolean')
+			->addOpt('share-stock', 'share stock', false, 'boolean')
+			->addOpt('name', 'name', false, 'string');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if($opt = $arguments->getOpt('list-shops', false)) {
+			$this->list_shops();
+			$status = true;
+		}
+		elseif($opt = $arguments->getOpt('list-groups', false)) {
+			$this->list_groups();
+			$status = true;
+		}
+		elseif($opt = $arguments->getOpt('enable-multistore', false)) {
+			$this->enable_multistore();
+		}
+		elseif($opt = $arguments->getOpt('disable-multistore', false)) {
+			$this->disable_multistore();
+		}
+		elseif($opt = $arguments->getOpt('create-group', false)) {
+
+			$active = $arguments->getOpt('active', false);
+
+			$shareCustomers = $arguments->getOpt('share-customers', false);
+			$shareStock = $arguments->getOpt('share-stock', false);
+			$shareOrders = $arguments->getOpt('share-orders', false);
+			if($name = $arguments->getOpt('name', false)) {
+				if($name == "1") {
+					echo "You must specify a name with --name option\n";
+					exit(1);
+				}
+			}
+			else {
+				echo "You must specify group name with --name option\n";
+				exit(1);
+			}
+
+			$this-> create_group($name, $shareCustomers, $shareStock, $shareOrders, $active = true); 
+		}
+		else {
+			$arguments->show_command_usage('multistore');
+			exit(1);
+		}
+
+		if ($status) {
+			exit(0);
+		}
+		else exit(1);
+
+	}
 
 	public static function list_shops() {
 
@@ -170,5 +236,8 @@ class PS_CLI_MULTISTORE {
 		}
 
 	}
-
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Multistore');
+
+?>

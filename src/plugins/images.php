@@ -1,6 +1,69 @@
 <?php
 
-class PS_CLI_IMAGES {
+class PS_CLI_IMAGES extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('image', 'Manage PrestaShop images');
+		$command->addOpt('list', 'List images', false)
+			->addOpt('regenerate-thumbs', 'Regenerate thumbnails', false)
+			->addOpt('category', 'Specify images category for thumbnails regeneration (all, products, categories, manufacturers, suppliers, scenes, stores)', false, 'string')
+			->addOpt('keep-old-images', 'Keep old images', false)
+			->addOpt('show-status', 'Show configuration', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if ($opt = $arguments->getOpt('list', false)) {
+			$this->list_images();
+		}
+		elseif($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+		}
+		elseif ($opt = $arguments->getOpt('regenerate-thumbs', false)) {
+
+			if($category = $arguments->getOpt('category', false)) {
+				$cats = Array(
+					'categories',
+					'manufacturers',
+					'suppliers',
+					'scenes',
+					'products',
+					'stores',
+					'all'
+				);
+
+				if (!in_array($category, $cats)) {
+					$error = '--category must be ';
+
+					foreach ($cats as $cat) {
+						$error .= $cat. ' ';
+					}
+
+					$this->_show_command_usage('image', $error);
+					exit(1);
+				}
+			}
+			else { $category = 'all'; }
+
+			if ($keepOld = $arguments->getOpt('keep-old-images', false)) {
+				$deleteOldImages = false;
+			}
+			else { $deleteOldImages = true; }
+
+			$this->regenerate_thumbnails($category, $deleteOldImages);
+		}
+		else {
+			$arguments->show_command_usage('image');
+			exit(1);
+		}
+
+		exit (0);
+
+	}
 
 	//TODO: delete old support
 
@@ -288,5 +351,7 @@ class PS_CLI_IMAGES {
 
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Images');
 
 ?>

@@ -1,10 +1,32 @@
 <?php
 
-class PS_CLI_EMAIL {
+class PS_CLI_Email extends PS_CLI_Plugin {
 
 	const MAIL_PHP = 1;
 	const MAIL_SMTP = 2;
 	const MAIL_DISABLED = 3;
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('email', 'Manage email configuration');
+		$command->addOpt('show-status', 'Show email configuration');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+		}
+		else {
+			$arguments->show_command_usage('email');
+			exit(1);
+		}
+
+		exit(0);
+	}
+
 
 	public static function show_status() {
 		$table = new Cli\Table();
@@ -89,5 +111,7 @@ class PS_CLI_EMAIL {
 	}
 
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Email');
 
 ?>

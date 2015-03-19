@@ -1,6 +1,46 @@
 <?php
 
-class PS_CLI_LOCALIZATION {
+class PS_CLI_Localization extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('localization', 'Manage PrestaShop localizations');
+		$command->addOpt('list-languages', 'List installed languages', false)
+			->addOpt('show-status', 'Show localization preferences', false)
+			->addOpt('import', 'Import localization', false)
+			->addOpt('enable', 'Enable language', false)
+			->addOpt('disable', 'Disable language', false)
+			->addArg('<iso-code>', 'Iso code of language', false);
+		
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('list-languages', false)) {
+			$this->list_languages();
+		}
+		elseif($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+		}
+		elseif($id = $arguments->getOpt('enable', false)) {
+			$this->enable_language($id);
+		}
+		elseif($id = $arguments->getOpt('disable', false)) {
+			$this->disable_language($id);
+		}
+		elseif($isoCode = $arguments->getOpt('import', false)) {
+			//todo: allow partial imports
+			$this->import_language($isoCode, 'all', true);
+		}
+		else {
+			$arguments->show_command_usage('localization');
+			exit(1);
+		}
+
+		exit(0);
+
+	}
 
 	public static function show_status() {
 
@@ -183,5 +223,7 @@ class PS_CLI_LOCALIZATION {
 
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Localization');
 
 ?>

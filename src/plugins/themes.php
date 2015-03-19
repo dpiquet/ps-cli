@@ -1,6 +1,46 @@
 <?php
 
-class PS_CLI_THEMES {
+class PS_CLI_Themes extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('theme', 'Manage PrestaShop themes');
+		$command->addOpt('list', 'List installed themes', false, 'boolean')
+			->addOpt('list-available', 'List available themes', false, 'boolean')
+			->addOpt('install-zip', 'Install theme from Zip archive', false, 'string')
+			->addOpt('activate', 'Install theme', false, 'integer')
+			->addArg('theme', 'Theme id', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if ($opt = $arguments->getOpt('list', false)) {
+			$this->print_theme_list();
+			exit(0);
+		}
+
+		elseif($opt = $arguments->getOpt('list-available', false)) {
+			$this->print_available_themes();
+			exit(0);
+		}
+		elseif($theme = $arguments->getOpt('activate', false)) {
+
+			$this->activate_theme($theme);
+
+			exit(0);
+		}
+		elseif($zip = $arguments->getOpt('install-zip', false)) {
+			$this->install_theme_zip($zip);
+		}
+		else {
+			$arguments->show_command_usage('theme');
+			exit(1);
+		}
+
+	}
 
 	public static function print_theme_list() {
 		$themes = Theme::getThemes();
@@ -519,5 +559,7 @@ class PS_CLI_THEMES {
 		return $new_theme_array;
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Themes');
 
 ?>

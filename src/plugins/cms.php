@@ -1,7 +1,93 @@
 <?php
 
-class PS_CLI_CMS {
+class PS_CLI_Cms extends PS_CLI_Plugin {
 
+	protected function __construct() {
+		$command = new PS_CLI_Command('cms', 'Manage CMS addOptions');
+		$command->addOpt('list-categories', 'List categories', false, 'boolean')
+			->addOpt('list-pages', 'List pages', false, 'boolean')
+			->addOpt('delete-page', 'Delete page', false, 'integer')
+			->addOpt('disable-page', 'Disable a page', false, 'integer')
+			->addOpt('enable-page', 'Enable a page', false, 'integer')
+			->addOpt('enable-category', 'Enable a category', false, 'integer')
+			->addOpt('disable-category', 'Disable a category', false, 'integer')
+			->addOpt('create-category', 'Create a category', false, 'boolean')
+			->addOpt('delete-category', 'Delete a category', false, 'integer')
+			->addOpt('name', 'Name of the category to create', false, 'string')
+			->addOpt('parent', 'Id of the parent category', false, 'integer')
+			->addOpt('link-rewrite', 'Link rewrite', false, 'string')
+			->addOpt('meta_title', 'Meta title', false, 'string')
+			->addOpt('meta_description', 'Meta description', false, 'string')
+			->addOpt('meta_keywords', 'Meta keywords', false, 'string')
+			->addOpt('description', 'Description of the category', false, 'string')
+			->addArg('<ID>', 'Category or page ID', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+		$interface = PS_CLI_INTERFACE::getInterface();
+
+		if($opt = $arguments->getOpt('list-categories', false)) {
+			$this->list_categories();
+			$status = true;
+		}
+		elseif($opt = $arguments->getOpt('list-pages', false)) {
+			$this->list_pages();
+			$status = true;
+		}
+		elseif($pageId = $arguments->getOpt('delete-page', false)) {
+			$status = $this->delete_page($pageId);
+		}
+		elseif($pageId = $arguments->getOpt('disable-page', false)) {
+			$status = $this->disable_page($pageId);
+		}
+		elseif($pageId = $arguments->getOpt('enable-page', false)) {
+			$status = $this->enable_page($pageId);
+		}
+		elseif($catId = $arguments->getOpt('enable-category', false)) {
+			$status = $this->enable_category($catId);
+		}
+		elseif($catId = $arguments->getOpt('disable-category', false)) {
+			$status = $this->disable_category($catId);
+		}
+		elseif($arguments->getOpt('create-category', false)) {
+			$name = $arguments->getOpt('name', false);
+			$parent = $arguments->getOpt('parent', false);
+			$rewrite = $arguments->getOpt('link-rewrite', false);
+			$description = $arguments->getOpt('description', '');
+			$meta_title = $arguments->getOpt('meta_title', '');
+			$meta_description = $arguments->getOpt('meta_description', '');
+			$meta_keywords = $arguments->getOpt('meta_keywords', '');
+
+			$status = $this->create_category(
+				$parent,
+				$name,
+				$rewrite, 
+				$description, 
+				$meta_title, 
+				$meta_description, 
+				$meta_keywords);
+		}
+		elseif($catId = $arguments->getOpt('delete-category', false)) {
+			$status = $this->delete_category($catId);
+		}
+		else {
+			//$this->_show_command_usage('cms');
+			$interface->exit_program(1);
+		}
+
+		if($status === true) {
+			$interface->exit_program(0);
+		}
+		else {
+			$interface->exit_program(1);
+		}
+
+	}
+
+	// todo: use interface ?
 	public static function list_categories() {
 		$context = Context::getContext();
 
@@ -23,7 +109,7 @@ class PS_CLI_CMS {
 
 		$categories = CMSCategory::getCategories($context->language->id, false);
 
-		//$categories[0][1] cannot be deleted so safe to assume it exists
+		//$categories[0][1] cannot be deleted so it's safe to assume it exists
 		self::_table_recurse_categories($categories, $categories[0][1], 1, $out);
 
 		$out->display();
@@ -363,5 +449,7 @@ class PS_CLI_CMS {
 		}	
 	}
 }
+
+PS_CLI_CONFIGURE::register_plugin('PS_CLI_Cms');
 
 ?>

@@ -6,7 +6,8 @@
  *
  */
 
-
+// just call the right plugin; remove all validators
+// or completely delete this class and keep the logic in plugins
 class PS_CLI_VALIDATOR {
 
 	private static $_userValidators = [];
@@ -311,11 +312,11 @@ class PS_CLI_VALIDATOR {
 	}
 
 	public static function add_validator($key, $pluginClassName) {
-		if(! class_exists($user_func)) {
+		if(! class_exists($pluginClassName)) {
 			return false;
 		}
 
-		self::$_validators[$key] = $pluginClassName;
+		self::$_userValidators[$key] = $pluginClassName;
 	}
 }
 

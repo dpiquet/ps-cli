@@ -1,6 +1,45 @@
 <?php
 
-class PS_CLI_SHOPS {
+class PS_CLI_Shop extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('shop', 'Control shop');
+		$command->addOpt('enable', 'Turn off maintenance mode on the shop', false)
+			->addOpt('disable', 'Turn on maintenance mode on the shop', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		$status = NULL;
+
+		if($arguments->getOpt('enable', false)) {
+			$successMsg = 'Maintenance mode disabled';
+			$errMsg = 'Could not disable maintenance mode';
+			$notChanged = 'Maintenance mode was already disabled';
+
+			PS_CLI_UTILS::update_global_value('PS_SHOP_ENABLE', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($opt = $arguments->getOpt('disable', false)) {
+			$successMsg = 'Maintenance mode enabled';
+			$errMsg = 'Could not enable maintenance mode';
+			$notChanged = 'Maintenance mode was already enabled';
+
+			PS_CLI_UTILS::update_global_value('PS_SHOP_ENABLE', false, $successMsg, $errMsg, $notChanged);
+		}
+		else {
+			$arguments->show_command_usage('shop');
+			exit(1);
+		}
+
+		if ($status === false) {
+			exit(1);
+		}
+
+		exit(0);
+	}
 
 	public static function print_shop_list() {
 		//function getShops($active = true, $id_shop_group = null, $get_as_list_id = false)
@@ -35,6 +74,9 @@ class PS_CLI_SHOPS {
 		print_r($shopList);
 	}
 
+	/*
+	 * Functions moved to PS_CLI_Configure class
+	 *
 	public static function set_current_shop_context($idShop) {
 
 		//used by Tools::getValue
@@ -67,6 +109,9 @@ class PS_CLI_SHOPS {
 
 		return true;
 	}
+	 */
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Shop');
 
 ?>

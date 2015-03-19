@@ -1,10 +1,64 @@
 <?php
 
-class PS_CLI_CCC {
+class PS_CLI_Ccc extends PS_CLI_Plugin {
 
-	//print status is currently in core class
-	
-	public static function enable_htaccess_cache() {
+	protected function __construct() {
+		$command = new PS_CLI_Command('ccc', 'Manage CCC configuration');
+		$command->addOpt('show-status', 'Show configuration status');
+		$command->addOpt('update-option', 'Update option value');
+		$command->addOpt('value', 'Value to give to the option');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('enable-html-minifier', false)) {
+			$successMsg = 'HTML code reduction successfully enabled';
+			$errMsg = 'Could not enable HTML code reduction';
+			$notChanged = 'HTML code reduction was already enabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_HTML_THEME_COMPRESSION', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-html-minifier', false)) {	
+			$successMsg = 'HTML code reduction successfully disabled';
+			$errMsg = 'Could not disable HTML code reduction';
+			$notChanged = 'HTML code reduction was already disabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_HTML_THEME_COMPRESSION', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('enable-js-minifier', false)) {
+			$successMsg = 'JavaScript code reduction successfully enabled';
+			$errMsg = 'Could not enable JavaScript code reduction';
+			$notChanged = 'JavaScript code reduction was already enabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_JS_THEME_COMPRESSION', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif($arguments->getOpt('disable-js-minifier', false)) {	
+			$successMsg = 'JavaScript code reduction successfully disabled';
+			$errMsg = 'Could not disable JavaScript code reduction';
+			$notChanged = 'JavaScript code reduction was already disabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_JS_THEME_COMPRESSION', false, $successMsg, $errMsg, $notChanged);
+		}
+		else {
+			$arguments->show_command_usage('ccc');
+			exit(1);
+		}
+
+		if($status) 	{ exit(0); }
+		else 		{ exit(1); }
+
+	}
+
+
+	// todo
+	private function update_option($option, $value) {
+		PS_CLI_UTILS::update_configuration_value($option, $value, $success, $err, $notChanged);	
+	}
+
+	private static function enable_htaccess_cache() {
 		$successMsg = 'Successfully enabled htaccess cache control';
 		$errMsg = 'Could not enable htaccess cache control';
 		$notChanged = 'Htaccess cache control wal already enabled';
@@ -22,7 +76,7 @@ class PS_CLI_CCC {
 		}
 	}
 
-	public static function disable_htaccess_cache() {
+	private static function disable_htaccess_cache() {
 		$successMsg = 'Successfully disabled htaccess cache control';
 		$errMsg = 'Could not disable htaccess cache control';
 		$notChanged = 'Htaccess cache control wal already disabled';
@@ -40,7 +94,7 @@ class PS_CLI_CCC {
 		}
 	}
 
-	public static function set_cipher($cipher) {
+	private static function set_cipher($cipher) {
 
 		if($cipher == 1) {
 			return self::enable_mcrypt_cipher();
@@ -54,7 +108,7 @@ class PS_CLI_CCC {
 		}
 	}
 
-	public static function enable_mcrypt_cipher() {
+	private static function enable_mcrypt_cipher() {
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM') == 1) {
 			//echo "Rijndael/Mcrypt cipher is already enabled\n";
 			//silently return as we are a core function now
@@ -103,7 +157,7 @@ class PS_CLI_CCC {
 		}
 	}
 
-	public static function enable_blowfish_cipher() {
+	private static function enable_blowfish_cipher() {
 		if(Configuration::getGlobalValue('PS_CIPHER_ALGORITHM') == 0) {
 			//echo "Blowfish cipher is already enabled\n";
 			return true;
@@ -146,5 +200,7 @@ class PS_CLI_CCC {
 
 	}
 }
+
+PS_CLI_CONFIGURE::register_plugin('PS_CLI_Ccc');
 
 ?>

@@ -1,7 +1,7 @@
 <?php
 
 // final class ?
-class PSCLI_Command {
+class PS_CLI_Command {
 
 	public $name;
 
@@ -17,25 +17,23 @@ class PSCLI_Command {
 	}
 
 	public function addArg($arg, $desc = '', $required = false) {
-		if(defined($this->_args[$arg])) {
+		if(array_key_exists($arg, $this->_args)) {
 			$interface = PS_CLI_INTERFACE::getInterfaceInstance();
 			$interface->add_warning("argument $arg has already been defined");
-
-			return false;
 		}
 
 		$this->_args[$arg] = Array(
 			'description' => $desc,
 			'required' => $required
 		);
+
+		return $this;
 	}
 
-	public function addOpt($opt, $desc = '', $type = 'string', $required = false) {
+	public function addOpt($opt, $desc = '', $required = false, $type = 'string') {
 		if(array_key_exists($opt, $this->_opts)) {
 			$interface = PS_CLI_INTERFACE::getInterface();
 			$interface->add_warning("option $opt has already been defined");
-
-			return false;
 		}
 
 		$this->_opts[$opt] = Array(
@@ -43,6 +41,8 @@ class PSCLI_Command {
 			'type' => $type,
 			'required' => $required
 		);
+
+		return $this;
 	}
 
 	public function getArgs() {

@@ -21,11 +21,11 @@ class PS_CLI_Autoupgrade extends PS_CLI_Plugin {
 
 	protected function __construct() {
 
-		$command = new PSCLI_Command('autoupgrade', 'Manage autoupgrade plugin');
+		$command = new PS_CLI_Command('autoupgrade', 'Manage autoupgrade plugin');
+		$command->addOpt('show-status', 'Show configuration', false, 'boolean');
 
-		$command->addOpt('show-status', 'Show configuration', 'boolean', false);
-
-		$command->register($this);
+		//$command->register($this);
+		$this->register_command($command);
 	}
 
 	public function run() {
@@ -49,9 +49,8 @@ class PS_CLI_Autoupgrade extends PS_CLI_Plugin {
 			$interface->set_ret_value(1);
 		}
 	}
-
 }
 
-PS_CLI_CONFIGURE::register_plugin('PSCLI_Autoupgrade');
+PS_CLI_CONFIGURE::register_plugin('PS_CLI_Autoupgrade');
 
 ?>

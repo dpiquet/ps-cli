@@ -21,7 +21,145 @@
 #	  - improve error messages / handling
 
 
-class PS_CLI_MODULES {
+class PS_CLI_Modules extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('modules', 'Manage PrestaShop modules');
+		$command->addOpt('enable', 'Enable module', false, 'string')
+			->addOpt('disable', 'Disable module', false, 'string')
+			->addOpt('reset', 'Reset module', false, 'string')
+			->addOpt('list', 'List modules', false, 'string')
+			->addOpt('install', 'Install module', false, 'string')
+			->addOpt('uninstall', 'Uninstall module', false, 'string')
+			->addOpt('upgrade', 'Upgrade modules from PrestaShop addons', false)
+			->addOpt('upgrade-db', 'Run modules database upgrades', false)
+			->addOpt('download', 'Download a module', false, 'string')
+			->addOpt('show-status', 'Show module configuration', false)
+			->addArg('<modulename>', 'The module to activate', true);
+		
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		$status = null;
+
+		//TODO: check modulename was given, print a message otherwise
+		// maybe add an else die smth ?
+		if ($opt = $arguments->getOpt('enable', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('modules');
+				exit(1);
+			}
+
+			$status = $this->enable_module($opt);
+		}
+		elseif ($opt = $arguments->getOpt('disable', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('modules');
+				exit(1);
+			}
+			
+			$status = $this->disable_module($opt);
+		}
+		elseif ($opt = $arguments->getOpt('reset', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('modules');
+				exit(1);
+			}
+
+			$status = $this->reset_module($opt);
+		}
+		elseif ($opt = $arguments->getOpt('install', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('modules');
+				exit(1);
+			}
+
+			$status = $this->install_module($opt);
+		}
+		elseif ($opt = $arguments->getOpt('uninstall', false)) {
+			if ($opt === "1") {
+				$arguments->show_command_usage('modules');
+				exit(1);
+			}
+			$status = $this->uninstall_module($opt);
+		}
+		elseif ($opt = $arguments->getOpt('list', false)) {
+			$status = $this->print_module_list();
+		}
+		elseif($arguments->getOpt('show-status', false)) {
+			$this->print_module_status();
+			$status = true;
+		}
+		elseif ($opt = $arguments->getOpt('upgrade', false)) {
+			$status = $this->upgrade_all_modules();
+		}
+		elseif ($opt = $arguments->getOpt('upgrade-db', false)) {
+			$status = $this->upgrade_all_modules_database();
+		}
+		elseif($moduleName = $arguments->getOpt('download', false)) {
+			$status = $this->download_install_module($moduleName);
+		}
+		elseif ($opt = $arguments->getOpt('enable-overrides', false)) {
+			$successMsg = 'modules overrides enabled';
+			$errMsg = 'modules overrides could not be enabled';
+			$notChanged = 'modules overrides were already enabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_OVERRIDES', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif ($opt = $arguments->getOpt('disable-overrides', false)) {
+			$successMsg = 'modules overrides disabled';
+			$errMsg = 'modules overrides could not be disabled';
+			$notChanged = 'modules overrides were already disabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_OVERRIDES', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif ($opt = $arguments->getOpt('enable-non-native', false)) {
+			$successMsg = 'non native modules enabled';
+			$errMsg = 'non native modules could not be enabled';
+			$notChanged = 'non native modules were already enabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', false, $successMsg, $errMsg, $notChanged);
+		}
+		elseif ($opt = $arguments->getOpt('disable-non-native', false)) {
+			$successMsg = 'non native modules disabled';
+			$errMsg = 'non native modules could not be disabled';
+			$notChanged = 'non native modules were already disabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif ($opt = $arguments->getOpt('enable-check-update', false)) {
+			$successMsg = 'modules auto updates check enabled';
+			$errMsg = 'modules auto updates could not be enabled';
+			$notChanged = 'modules auto updates checks were already enabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PRESTASTORE_LIVE', true, $successMsg, $errMsg, $notChanged);
+		}
+		elseif ($opt = $arguments->getOpt('disable-check-update', false)) {
+			$successMsg = 'modules auto updates check disabled';
+			$errMsg = 'modules auto updates could not be disabled';
+			$notChanged = 'modules auto updates checks were already disabled';
+
+			$status = PS_CLI_UTILS::update_global_value('PRESTASTORE_LIVE', false, $successMsg, $errMsg, $notChanged);
+		}
+		else {
+			$arguments->show_command_usage('modules');
+			exit(1);
+		}
+
+		$interface = PS_CLI_INTERFACE::getInterface();
+		if ($status === false) {
+			$interface->set_ret_val(PS_CLI_INTERFACE::RET_ERR);
+		}
+
+		// functions exits 1 on error
+		//exit(0);
+		$interface->set_ret_val(PS_CLI_INTERFACE::RET_OK);
+
+	}
 
 	function delete_module() {
 		/**postProcessDelete() **/
@@ -483,5 +621,7 @@ class PS_CLI_MODULES {
 		return true;
 	}
 }
+
+PS_CLI_CONFIGURE::register_plugin('PS_CLI_Modules');
 
 ?>

@@ -1,6 +1,35 @@
 <?php
 
-class PS_CLI_ORDER_PREFERENCES {
+class PS_CLI_OrderPreferences extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('order-preferences', 'PrestaShop orders preferences');
+		$command->addOpt('show-status', 'Show current order configuration', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->print_order_preferences();
+			$status = true;
+		}
+		else {
+			$arguments->show_command_usage('order-preferences');
+			exit(1);
+		}
+
+		if($status) {
+			exit(0);
+		}
+		else {
+			exit(1);
+		}
+
+	}
+
 	public static function print_order_preferences() {
 		$table = new Cli\Table();
 
@@ -33,5 +62,7 @@ class PS_CLI_ORDER_PREFERENCES {
 		$table->display();
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_OrderPreferences');
 
 ?>

@@ -17,6 +17,8 @@ class PS_CLI_CONFIGURE {
 
 	public $verbose = false;
 
+	public $debug = true;
+
 	public $porcelain = false;
 
 	public $groupid;
@@ -55,7 +57,7 @@ class PS_CLI_CONFIGURE {
 
 		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
 
-		// configuration done. Load the plugins
+		// preconfiguration done. Load the plugins
 		$this->read_plugin_directories();
 
 		$arguments->parse_arguments();
@@ -175,9 +177,8 @@ class PS_CLI_CONFIGURE {
 			//todo: check if we are on group context
 			
 
-			PS_CLI_SHOPS::set_current_shop_context($opt);
+			self::set_current_shop_context($opt);
 		}
-
 	}
 
 	public static function find_ps_root($current = NULL) {
@@ -241,11 +242,15 @@ class PS_CLI_CONFIGURE {
 
 		if(!class_exists($pluginClass)) { return false; }
 
-		$plugin = $pluginClass::getInstance();
+		$pluginInstance = $pluginClass::getInstance();
 
-		if(is_subclass_of($plugin, 'PSCLI_Plugin')) {
-					
-			$configuration->_register_plugin($plugin);
+		if(is_subclass_of($pluginInstance, 'PS_CLI_Plugin')) {
+			
+			if($configuration->debug) {
+				$interface->display_line("Registering plugin $pluginClass");
+			}
+
+			$configuration->_register_plugin($pluginClass, $pluginInstance);
 
 			return true;
 		}
@@ -253,17 +258,23 @@ class PS_CLI_CONFIGURE {
 			$interface->add_warning("Invalid load_plugin call !");
 			return false;
 		}
-
 	}
 
-	private function _register_plugin($plugin) {
-		$this->pluginsLoaded[$plugin->name] = $plugin;
+	private function _register_plugin($pluginClass, $pluginInstance) {
+		$commands = $pluginInstance->getCommands();
+		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+
+		foreach($commands as $command) {
+			$arguments->add_command($command, $pluginInstance);
+		}
+
+		$this->pluginsLoaded[$pluginClass] = $pluginInstance;
 	}
 
 	public function read_plugin_directories() {
 
 		foreach($this->pluginDirs as $dir) {
-			if($this->verbose) {
+			if($this->debug) {
 				echo "scanning $dir for plugins\n";
 			}
 
@@ -286,6 +297,41 @@ class PS_CLI_CONFIGURE {
 			closedir($fh);
 		}
 	}
+
+
+	//TODO: in progress, must be finished
+	public static function set_current_shopgroup_context($idGroup) {
+		$context = Context::getContext();
+
+		if (!Validate::isLoadedObject($context->shop)) {
+			$context->shop = new Shop();
+		}
+		
+		$context->shop->id_shop_group = $idGroup;
+
+		return true;
+	}
+
+	public static function set_current_shop_context($idShop) {
+
+		//used by Tools::getValue
+		$_GET['id_shop'] = $idShop;
+		$_POST['id_shop'] = $idShop;
+
+		Shop::setContext(Shop::CONTEXT_SHOP, $idShop);
+
+		$context = Context::getContext();
+		$context->shop = new Shop($idShop);
+
+		if(Validate::isLoadedObject($context->shop)) {
+			return true;
+		}
+		else {
+			echo "Error, could not set current shop ID\n";
+			return false;
+		}
+	}
+
 }
 
 ?>

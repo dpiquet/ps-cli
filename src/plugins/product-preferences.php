@@ -1,6 +1,26 @@
 <?php
 
-class PS_CLI_PRODUCT_PREFERENCES {
+class PS_CLI_ProductPreferences extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command= new PS_CLI_Command('product-preferences', 'PrestaShop products preferences');
+		$command->addOpt('show-status', 'Show current products preferences', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+
+		if($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+			$status = true;
+		}
+		else {
+			$arguments->show_command_usage('product-preferences');
+			exit(1);
+		}
+	}
 	
 	public static function show_status() {
 	
@@ -39,9 +59,9 @@ class PS_CLI_PRODUCT_PREFERENCES {
 		$table->display();
 
 		return;
-
 	}
-
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_ProductPreferences');
 
 ?>

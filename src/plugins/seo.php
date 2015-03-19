@@ -1,6 +1,40 @@
 <?php
 
-class PS_CLI_SEO {
+class PS_CLI_Seo extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('seo', 'Manage SEO & URL');
+		$command->AddOpt('list-metas', 'List metas tags', false)
+			->addOpt('show-status', 'Show configuration', false)
+			->addOpt('base-uri', 'Set shop base URI', false, 'string');
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if($opt = $arguments->getOpt('list-metas', false)) {
+			$this->list_metas();
+		}
+		elseif($arguments->getOpt('show-status', false)) {
+			$this->show_status();
+		}
+		elseif($baseUri = $arguments->getOpt('base-uri', null)) {
+			if(!Validate::isUrl($baseUri)) {
+				echo "Error: '$baseUri' is not a valid URI\n";
+				exit(1);
+			}
+			$status = $this->update_base_uri($baseUri);
+		}
+		else {
+			$arguments->show_command_usage('seo');
+			exit(1);
+		}
+
+		exit(0);
+	}
 
 	public static function list_metas() {
 
@@ -142,3 +176,7 @@ class PS_CLI_SEO {
 		}
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Seo');
+
+?>

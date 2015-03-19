@@ -5,7 +5,41 @@
 # TODO: enable / disable API; generate API keys ?
 #
 
-class PS_CLI_CORE {
+class PS_CLI_Core extends PS_CLI_Plugin {
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('core', 'Manage PrestaShop core');
+
+		$command->addOpt('check-version', 'check for available updates', false)
+			->addOpt('list-modified-files', 'List modified files', false)
+			->addOpt('show-info', 'Show server configuration', false)
+			->addOpt('show-version', 'Show PrestaShop version', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if ($arguments->getOpt('check-version', false)) {
+			$this->core_check_version();
+		}
+		elseif ($arguments->getOpt('list-modified-files', false)) {
+			$this->core_list_changed_files();
+		}
+		elseif($arguments->getOpt('show-info', false)) {
+			$this->print_server_info();
+		}
+		elseif($arguments->getOpt('show-version', false)) {
+			$this->core_show_version();
+		}
+		else {
+			$arguments->show_command_usage('core');
+			exit(1);
+		}
+
+	}
 
 	public static function core_check_version() {
 		$upgrader = new UpgraderCore;
@@ -441,5 +475,7 @@ class PS_CLI_CORE {
 		$table->display();
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Core');
 
 ?>

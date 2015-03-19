@@ -1,8 +1,39 @@
 <?php
 
-class PS_CLI_PROFILE {
+class PS_CLI_Profile extends PS_CLI_Plugin {
 
 	const _SUPERADMIN_PROFILE_ID_ = 1;
+
+	protected function __construct() {
+		$command = new PS_CLI_Command('profile', 'Manage PrestaShop profiles');
+		$command->addOpt('list', 'List profiles', false)
+			->addOpt('delete', 'Delete a profile', false, 'integer')
+			->addOpt('list-permissions', 'List a profile permissions', false, 'integer')
+			->addArg('<ID>', 'Profile ID', false);
+
+		$this->register_command($command);
+	}
+
+	public function run() {
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$interface = PS_CLI_Interface::getInterface();
+
+		if ($opt = $arguments->getOpt('list', false)) {
+			$this->print_profile_list();
+		}
+		elseif ($id = $arguments->getOpt('delete', false)) {
+			$status = $this->delete_profile($id);
+		}
+		elseif ($id = $arguments->getOpt('list-permissions', false)) {
+			$status = $this->list_permissions($id);
+		}
+		else {
+			$arguments->show_command_usage('profile');
+			exit(1);
+		}
+
+		exit(0);
+	}
 
 	public static function print_profile_list() {
 		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
@@ -99,3 +130,7 @@ class PS_CLI_PROFILE {
 		$table->display();
 	}
 }
+
+PS_CLI_Configure::register_plugin('PS_CLI_Profile');
+
+?>

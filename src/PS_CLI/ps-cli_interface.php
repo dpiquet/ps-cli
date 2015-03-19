@@ -62,7 +62,7 @@ class PS_CLI_INTERFACE {
 
 	public function exception_quit() {
 		foreach ($this->exceptions as $e) {
-			echo "Got exception $e\n";
+			echo "Got exception " . $e->getMessage() . "\n";
 		}
 
 		exit(self::RET_EXCEPTION);
@@ -72,13 +72,20 @@ class PS_CLI_INTERFACE {
 		$this->buffer .= $content;
 	}
 
+	public function display_line($line) {
+		echo "$line\n";
+	}
+
 	public function set_ret_val($val, $force = false) {
 		if($force) { $this->retVal = $val; }
 		else { $this->retVal |= $val; }
 	}
 
 	public function add_table(Cli\Table $table) {
-		// Cli\Table does not support output buffering at the moment
+		$table->display();
+	}
+
+	public function display_table(Cli\Table $table) {
 		$table->display();
 	}
 
