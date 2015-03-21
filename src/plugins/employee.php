@@ -19,16 +19,16 @@ class PS_CLI_Employee extends PS_CLI_Plugin {
 			->addOpt('disable', 'Disable an employee', false, 'string')
 			->addOpt('enable', 'Enable an employee', false, 'string')
 			->addOpt('create', 'Create an employee', false, 'string')
+			->addOpt('edit', 'Edit an employee', false, 'string')
 			->addArg('<email address>', 'Employee email address', false)
 			->addOpt('password', 'Employee password', false, 'string')
 			->addOpt('profile', 'Employee profile', false, 'integer')
 			->addOpt('first-name', 'Employee first name', false, 'string')
-			->addOpt('last-name', 'Employee last name', false, 'string')
-			->addOpt('show-status', 'Show employee configuration', false, 'boolean');
+			->addOpt('last-name', 'Employee last name', false, 'string');
+
 		$this->register_command($command);
 	}
 
-	// TODO: refactor in plugin
 	public function run() {
 		$arguments = PS_CLI_Arguments::getArgumentsInstance();
 		$interface = PS_CLI_Interface::getInterface();
@@ -37,10 +37,6 @@ class PS_CLI_Employee extends PS_CLI_Plugin {
 
 		if ($arguments->getOpt('list', false)) {
 			$status = $this->list_employees();
-		}
-		elseif($arguments->getOpt('show-status', false)) {
-			$this->print_employee_options();
-			$status = true;
 		}
 		elseif ($opt = $arguments->getOpt('delete', false)) {
 			if ($opt === "1") {
@@ -513,25 +509,6 @@ class PS_CLI_Employee extends PS_CLI_Plugin {
 
 		return $superadminID;
 	}
-
-	public static function print_employee_options() {
-		$table = new Cli\Table();
-
-		$table->setHeaders(Array(
-			'Key',
-			'Configuration',
-			'Value'
-			)
-		);
-
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_PASSWD_TIME_BACK', 'Minimum delay for password regeneration');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 'Memorize last used language in forms');
-
-		$table->display();
-
-		return;
-	}
-
 }
 
 PS_CLI_Configure::register_plugin('PS_CLI_Employee');

@@ -57,7 +57,7 @@ class PS_CLI_Core extends PS_CLI_Plugin {
 	public static function core_show_version() {
 		$version = _PS_VERSION_;
 
-		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+		$configuration = PS_CLI_Configure::getConfigurationInstance();
 
 		if($configuration->porcelain) {
 			echo "$version\n";
@@ -119,7 +119,7 @@ class PS_CLI_Core extends PS_CLI_Plugin {
 	}
 
 	public static function clear_smarty_cache() {
-		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+		$configuration = PS_CLI_Configure::getConfigurationInstance();
 
 		echo "Clearing cache...\n";
 
@@ -162,24 +162,24 @@ class PS_CLI_Core extends PS_CLI_Plugin {
 			)
 		);
 
-		PS_CLI_UTILS::add_boolean_configuration_status(
+		PS_CLI_Utils::add_boolean_configuration_status(
 			$table, 
 			'PS_SMARTY_CACHE', 
 			'Smarty Template Cache');
 
-		PS_CLI_UTILS::add_configuration_value(
+		PS_CLI_Utils::add_configuration_value(
 			$table, 
 			'PS_SMARTY_CACHING_TYPE', 
 			'Smarty Caching type', 
 			'1.6.0.11');
 
-		PS_CLI_UTILS::add_configuration_value(
+		PS_CLI_Utils::add_configuration_value(
 			$table,
 			'PS_SMARTY_CONSOLE',
 			'Display smarty console (0 for never, 1 for URL, 2 for always)',
 			'1.6.0.11');
 
-		PS_CLI_UTILS::add_configuration_value(
+		PS_CLI_Utils::add_configuration_value(
 			$table,
 			'PS_SMARTY_CONSOLE_KEY',
 			'Smarty console key',
@@ -208,22 +208,22 @@ class PS_CLI_Core extends PS_CLI_Plugin {
 
 		$table->addRow($line);
 
-		PS_CLI_UTILS::add_boolean_configuration_status(
+		PS_CLI_Utils::add_boolean_configuration_status(
 			$table, 
 			'PS_CSS_THEME_CACHE', 
 			'Css cache');
 
-		PS_CLI_UTILS::add_boolean_configuration_status(
+		PS_CLI_Utils::add_boolean_configuration_status(
 			$table, 
 			'PS_JS_THEME_CACHE', 
 			'JS cache'); 
 
-		PS_CLI_UTILS::add_boolean_configuration_status(
+		PS_CLI_Utils::add_boolean_configuration_status(
 			$table, 
 			'PS_HTACCESS_CACHE_CONTROL', 
 			'Htaccess cache control');
 
-		PS_CLI_UTILS::add_boolean_configuration_status(
+		PS_CLI_Utils::add_boolean_configuration_status(
 			$table, 
 			'PS_MEDIA_SERVERS', 
 			'Use Media Servers');

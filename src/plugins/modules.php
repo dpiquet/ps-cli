@@ -35,14 +35,22 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 			->addOpt('upgrade-db', 'Run modules database upgrades', false)
 			->addOpt('download', 'Download a module', false, 'string')
 			->addOpt('show-status', 'Show module configuration', false)
-			->addArg('<modulename>', 'The module to activate', true);
+            ->addArg('<modulename>', 'The module to activate', true);
+
+        $prefCommand = new PS_CLI_Command('modules-preferences', 'Manage modules preferences');
+        $prefCommand->addOpt('show-status', 'Show module configuration', false, 'boolean')
+            ->addOpt('update', 'Update configuration value', false, 'boolean')
+            ->addOpt('key', 'Configuration key to update', false, 'string')
+            ->addOpt('value', 'Value to assign to the configuration key', false, 'string');
 		
 		$this->register_command($command);
+		$this->register_command($prefCommand);
 	}
 
 	public function run() {
 		$arguments = PS_CLI_Arguments::getArgumentsInstance();
-		$interface = PS_CLI_Interface::getInterface();
+        $interface = PS_CLI_Interface::getInterface();
+        $command = $arguments->getCommand();
 
 		$status = null;
 
@@ -51,7 +59,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		if ($opt = $arguments->getOpt('enable', false)) {
 			if ($opt === "1") {
 				$arguments->show_command_usage('modules');
-				exit(1);
+				$interface->error();
 			}
 
 			$status = $this->enable_module($opt);
@@ -59,7 +67,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		elseif ($opt = $arguments->getOpt('disable', false)) {
 			if ($opt === "1") {
 				$arguments->show_command_usage('modules');
-				exit(1);
+				$interface->error();
 			}
 			
 			$status = $this->disable_module($opt);
@@ -67,7 +75,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		elseif ($opt = $arguments->getOpt('reset', false)) {
 			if ($opt === "1") {
 				$arguments->show_command_usage('modules');
-				exit(1);
+				$interface->error();
 			}
 
 			$status = $this->reset_module($opt);
@@ -75,7 +83,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		elseif ($opt = $arguments->getOpt('install', false)) {
 			if ($opt === "1") {
 				$arguments->show_command_usage('modules');
-				exit(1);
+				$interface->error();
 			}
 
 			$status = $this->install_module($opt);
@@ -83,7 +91,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		elseif ($opt = $arguments->getOpt('uninstall', false)) {
 			if ($opt === "1") {
 				$arguments->show_command_usage('modules');
-				exit(1);
+				$interface->error();
 			}
 			$status = $this->uninstall_module($opt);
 		}
@@ -93,7 +101,21 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		elseif($arguments->getOpt('show-status', false)) {
 			$this->print_module_status();
 			$status = true;
-		}
+        }
+        elseif($arguments->getOpt('update', false)) {
+            $key = $arguments->getOpt('key', NULL);
+            $value = $arguments->getOpt('value', NULL);
+
+            if(is_null($key)) {
+                $interface->error('You must provide --key with --update');
+            }
+
+            if(is_null($value)) {
+                $interface->error('You must provide --value with --update');
+            }
+
+            $this->_update_configuration($key, $value); 
+        }
 		elseif ($opt = $arguments->getOpt('upgrade', false)) {
 			$status = $this->upgrade_all_modules();
 		}
@@ -108,56 +130,54 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 			$errMsg = 'modules overrides could not be enabled';
 			$notChanged = 'modules overrides were already enabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_OVERRIDES', true, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PS_DISABLE_OVERRIDES', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-overrides', false)) {
 			$successMsg = 'modules overrides disabled';
 			$errMsg = 'modules overrides could not be disabled';
 			$notChanged = 'modules overrides were already disabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_OVERRIDES', false, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PS_DISABLE_OVERRIDES', false, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('enable-non-native', false)) {
 			$successMsg = 'non native modules enabled';
 			$errMsg = 'non native modules could not be enabled';
 			$notChanged = 'non native modules were already enabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', false, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', false, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-non-native', false)) {
 			$successMsg = 'non native modules disabled';
 			$errMsg = 'non native modules could not be disabled';
 			$notChanged = 'non native modules were already disabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', true, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PS_DISABLE_NON_NATIVE_MODULE', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('enable-check-update', false)) {
 			$successMsg = 'modules auto updates check enabled';
 			$errMsg = 'modules auto updates could not be enabled';
 			$notChanged = 'modules auto updates checks were already enabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PRESTASTORE_LIVE', true, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PRESTASTORE_LIVE', true, $successMsg, $errMsg, $notChanged);
 		}
 		elseif ($opt = $arguments->getOpt('disable-check-update', false)) {
 			$successMsg = 'modules auto updates check disabled';
 			$errMsg = 'modules auto updates could not be disabled';
 			$notChanged = 'modules auto updates checks were already disabled';
 
-			$status = PS_CLI_UTILS::update_global_value('PRESTASTORE_LIVE', false, $successMsg, $errMsg, $notChanged);
+			$status = PS_CLI_Utils::update_global_value('PRESTASTORE_LIVE', false, $successMsg, $errMsg, $notChanged);
 		}
 		else {
-			$arguments->show_command_usage('modules');
-			exit(1);
+			$arguments->show_command_usage($command);
+			$interface->error();
 		}
 
-		$interface = PS_CLI_INTERFACE::getInterface();
+		$interface = PS_CLI_Interface::getInterface();
 		if ($status === false) {
-			$interface->set_ret_val(PS_CLI_INTERFACE::RET_ERR);
+			$interface->set_ret_val(PS_CLI_Interface::RET_ERR);
 		}
 
-		// functions exits 1 on error
-		//exit(0);
-		$interface->set_ret_val(PS_CLI_INTERFACE::RET_OK);
+		$interface->success();
 
 	}
 
@@ -397,7 +417,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 				break;
 		}
 
-		$interface = PS_CLI_INTERFACE::getInterface();
+		$interface = PS_CLI_Interface::getInterface();
 
 		if($table) {
 			//$table->display();
@@ -563,7 +583,7 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		}
 	}
 
-	public static function print_module_status() {
+	public function print_module_status() {
 		$table = new Cli\Table();
 
 		$table->setHeaders(Array(
@@ -573,12 +593,41 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 			)
 		);
 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_DISABLE_NON_NATIVE', 'Disable non native modules');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_DISABLE_OVERRIDES', 'Disable all overrides');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PRESTASTORE_LIVE', 'Automatically check modules updates');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_DISABLE_NON_NATIVE', 'Disable non native modules');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_DISABLE_OVERRIDES', 'Disable all overrides');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PRESTASTORE_LIVE', 'Automatically check modules updates');
 
 		$table->display();
-	}
+    }
+
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
+
+        $validValue = false;
+
+        switch($key) {
+            case 'PS_DISABLE_NON_NATIVE':
+            case 'PS_DISABLE_OVERRIDES':
+            case 'PRESTASTORE_LIVE':
+                $validValue = Validate::isBool($value);
+                break;
+
+            default:
+                $interface->error("Configuration key '$key' is not handled by this command");
+                break;
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration_value($key, $value)) {
+            $interface->success("Successfully updated $key configuration");
+        }
+        else {
+            $interface->error("Could not updated $key configuration");
+        }
+    }
 
 	// download (and extract ?) module
 	public static function download_install_module($moduleName) {

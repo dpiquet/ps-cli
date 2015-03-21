@@ -3,7 +3,7 @@
 // todo: extend class Cli instead of modifying it
 // 	 set exit code depending on the functions return
 
-class PS_CLI_UTILS {
+class PS_CLI_Utils {
 
 	public static $VERBOSE = false;
 	public static $ALLOW_ROOT = false;
@@ -178,6 +178,7 @@ class PS_CLI_UTILS {
 		}
 	}
 
+	/*
 	public static function update_configuration_value($key, $status, $successMsg, $errMsg, $leftMsg) {
 		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
 
@@ -208,7 +209,18 @@ class PS_CLI_UTILS {
 			echo "Error: $errMsg\n";
 			return false;
 		}
-	
+	}
+	 */
+
+	public static function update_configuration_value($key, $value) {
+		$configuration = PS_CLI_CONFIGURE::getConfigurationInstance();
+
+		if($configuration->global) {
+			return Configuration::updateGlobalValue($key, $value);
+		}
+		else {
+			return Configuration::updateValue($key, $value);
+		}
 	}
 
 	public static function add_boolean_configuration_status(Cli\Table &$table, $key, $friendlyName, $since = NULL) {
@@ -249,14 +261,6 @@ class PS_CLI_UTILS {
 		$line = Array($key, $friendlyName);
 
 		$value = Configuration::get($key);
-
-		if($value === false) {
-			$value = 'Unsupported on your current prestashop version';
-
-			if($since !== null) {
-				$value .= " (requires $since version)";
-			}
-		}
 
 		array_push($line, $value);
 

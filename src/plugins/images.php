@@ -1,6 +1,6 @@
 <?php
 
-class PS_CLI_IMAGES extends PS_CLI_Plugin {
+class PS_CLI_Images extends PS_CLI_Plugin {
 
 	protected function __construct() {
 		$command = new PS_CLI_Command('image', 'Manage PrestaShop images');
@@ -8,7 +8,10 @@ class PS_CLI_IMAGES extends PS_CLI_Plugin {
 			->addOpt('regenerate-thumbs', 'Regenerate thumbnails', false)
 			->addOpt('category', 'Specify images category for thumbnails regeneration (all, products, categories, manufacturers, suppliers, scenes, stores)', false, 'string')
 			->addOpt('keep-old-images', 'Keep old images', false)
-			->addOpt('show-status', 'Show configuration', false);
+			->addOpt('show-status', 'Show configuration', false)
+			->addOpt('update', 'Update configuration value', false, 'boolean')
+			->addOpt('key', 'Configuration key to update', false, 'string')
+			->addOpt('value', 'Value to assign to the configuration key', false, 'string');
 
 		$this->register_command($command);
 	}
@@ -22,6 +25,20 @@ class PS_CLI_IMAGES extends PS_CLI_Plugin {
 		}
 		elseif($arguments->getOpt('show-status', false)) {
 			$this->show_status();
+		}
+		elseif($arguments->getOpt('update', false)) {
+			$key = $arguments->getOpt('key', NULL);
+			$value = $arguments->getOpt('value', NULL);
+
+			if(is_null($key)) {
+				$interface->error('You must provide --key with --update');
+			}
+
+			if(is_null($value)) {
+				$interface->error('You must provide --value with --update');
+			}
+
+			$this->_update_configuration($key, $value);
 		}
 		elseif ($opt = $arguments->getOpt('regenerate-thumbs', false)) {
 
@@ -58,7 +75,7 @@ class PS_CLI_IMAGES extends PS_CLI_Plugin {
 		}
 		else {
 			$arguments->show_command_usage('image');
-			exit(1);
+			$interface->error();
 		}
 
 		exit (0);
@@ -349,6 +366,66 @@ class PS_CLI_IMAGES extends PS_CLI_Plugin {
 
 		return;
 
+	}
+
+	private function _update_configuration($key, $value) {
+		$interface = PS_CLI_Interface::getInterface();
+
+		// we need to run a function after updating some configuration value
+		$callback = null;
+
+		$validValue = true;
+
+		switch($key) {
+			
+			case 'PS_IMAGE_QUALITY':
+				$callback = Array(Array($this, 'regenerate_thumbnails'), Array());
+				$validValue = in_array($value, Array('jpg', 'png', 'png_all'));
+				break;
+
+			case 'PS_JPEG_QUALITY':
+				$callback = Array( get_class() . '::regenerate_thumbnails', Array());
+				$validValue = Validate::isPercentage($value);
+				break;
+
+			case 'PS_PNG_QUALITY':
+				$callback = Array( get_class() . '::regenerate_thumbnails', Array());
+				$validValue = (Validate::isUnsignedInt($value) &&
+						$value <= 9);
+				break;
+
+			case 'PS_IMAGE_GENERATION_METHOD':
+				$callback = Array( get_class() . '::regenerate_thumbnails', Array());
+				$validValue = (Validate::isUnsignedInt($value) &&
+						$value <= 2);
+				break;
+
+			case 'PS_PRODUCT_PICTURE_MAX_SIZE':
+			case 'PS_PRODUCT_PICTURE_WIDTH':
+			case 'PS_PRODUCT_PICTURE_HEIGHT':
+				$validValue = Validate::isUnsignedInt($value);
+				break;
+
+			default:
+				$interface->error("The configuration key '$key' is not handled by this plugin");
+				break;
+		}
+
+		if(!$validValue) {
+			$interface->error("Invalid value '$value' for configuration key '$key'");
+		}
+		
+		if(PS_CLI_Utils::update_configuration_value($key, $value)) {
+
+            if(is_array($callback)) {
+				call_user_func_array($callback[0], $callback[1]);
+			}
+
+			$interface->success("Successfully updated configuration key '$key'");
+		}
+		else {
+			$interface->error("Could not update configuration key '$key'");
+		}
 	}
 }
 

@@ -5,17 +5,25 @@ class PS_CLI_Localization extends PS_CLI_Plugin {
 	protected function __construct() {
 		$command = new PS_CLI_Command('localization', 'Manage PrestaShop localizations');
 		$command->addOpt('list-languages', 'List installed languages', false)
-			->addOpt('show-status', 'Show localization preferences', false)
 			->addOpt('import', 'Import localization', false)
 			->addOpt('enable', 'Enable language', false)
 			->addOpt('disable', 'Disable language', false)
-			->addArg('<iso-code>', 'Iso code of language', false);
+            ->addArg('<iso-code>', 'Iso code of language', false);
+
+        $prefCommand = new PS_CLI_Command('localization-preferences', 'Manage PrestaShop localization preferences');
+        $prefCommand->addOpt('show-status', 'Show localization preferences', false, 'boolean')
+            ->addOpt('update', 'Update localization configuration', false, 'boolean')
+            ->addOpt('key', 'Configuration key to update', false, 'string')
+            ->addOpt('value', 'Value to assign', false, 'string');
 		
 		$this->register_command($command);
+		$this->register_command($prefCommand);
 	}
 
 	public function run() {
-		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+        $arguments = PS_CLI_Arguments::getArgumentsInstance();
+        $interface = PS_CLI_Interface::getInterface();
+        $command = $arguments->getCommand();
 
 		if($arguments->getOpt('list-languages', false)) {
 			$this->list_languages();
@@ -32,17 +40,30 @@ class PS_CLI_Localization extends PS_CLI_Plugin {
 		elseif($isoCode = $arguments->getOpt('import', false)) {
 			//todo: allow partial imports
 			$this->import_language($isoCode, 'all', true);
-		}
+        }
+        elseif($arguments->getOpt('update')) {
+            $key = $arguments->getOpt('key', NULL);
+            $value = $arguments->getOpt('value', NULL);
+
+            if(is_null($key)) {
+                $interface->error("You must provide --key with --update");
+            }
+
+            if(is_null($value)) {
+                $interface->error("You must provide --value with --update");
+            }
+
+            $this->_update_configuration($key, $value);
+        }
 		else {
-			$arguments->show_command_usage('localization');
-			exit(1);
+			$arguments->show_command_usage($command);
+			$interface->error();
 		}
 
-		exit(0);
-
+		$interface->success();
 	}
 
-	public static function show_status() {
+	public function show_status() {
 
 		$table = new Cli\Table();
 
@@ -53,23 +74,107 @@ class PS_CLI_Localization extends PS_CLI_Plugin {
 			)
 		);
 
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_LANG_DEFAULT', 'Default language');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_DETECT_LANG', 'Set language from browser');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_COUNTRY_DEFAULT', 'Default country');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_TIMEZONE', 'Default country');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_CURRENCY_DEFAULT', 'Default, currency');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_WEIGHT_UNIT', 'Default weight unit');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_DISTANCE_UNIT', 'Default distance unit');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_VOLUME_UNIT', 'Default volume unit');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_DIMENSION_UNIT', 'Default dimension unit');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_LOCALE_LANGUAGE', 'Webserver locale ISO code');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_LOCALE_COUNTRY', 'Webserver country iso code');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_LANG_DEFAULT', 'Default language');
+        PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_DETECT_LANG', 'Set language from browser');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_COUNTRY_DEFAULT', 'Default country');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_TIMEZONE', 'Default timezone');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_CURRENCY_DEFAULT', 'Default, currency');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_WEIGHT_UNIT', 'Default weight unit');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_DISTANCE_UNIT', 'Default distance unit');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_VOLUME_UNIT', 'Default volume unit');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_DIMENSION_UNIT', 'Default dimension unit');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_LOCALE_LANGUAGE', 'Webserver locale ISO code');
+        PS_CLI_Utils::add_configuration_value($table, 'PS_LOCALE_COUNTRY', 'Webserver country iso code');
 
+        $table->display();
+    }
 
-		$table->display();
-	}
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
 
-	public static function list_languages() {
+        $validValue = false;
+
+        switch($key) {
+            case 'PS_LANG_DEFAULT':
+                if(Validate::isUnsignedId($value)) {
+                    $obj = new Language((int)$value);
+
+                    if(Validate::isLoadedObject($obj)) {
+                        $validValue = true;
+                    }
+                    else {
+                        $interface->error("No language with ID: $value could be loaded");
+                    }
+                }
+                break;
+
+            case 'PS_DETECT_LANG':
+                $validValue = Validate::isBool($value);
+                break;
+
+            case 'PS_COUNTRY_DEFAULT':
+                if(Validate::isUnsignedId($value)) {
+                    $obj = new Country((int)$value);
+
+                    if(Validate::isLoadedObject($obj)) {
+                        $validValue = true;
+                    }
+                    else {
+                        $interface->error("No country with ID $value could be loaded");
+                    }
+                }
+                break;
+
+            case 'PS_TIMEZONE':
+                $validValue = Validate::isAnything($value);
+                break;
+
+            case 'PS_CURRENCY_DEFAULT':
+                if(Validate::isUnsignedId($value)) {
+                    $obj = new Currency((int)$value);
+
+                    if(Validate::isLoadedObject($obj)) {
+                        $validValue = true;
+                    }
+                    else {
+                        $interface->error("Could not load a currency with ID '$value'");
+                    }
+                }
+                break;
+
+            case 'PS_WEIGHT_UNIT':
+            case 'PS_VOLUME_UNIT':
+                $validValue = Validate::isWeightUnit($value);
+                break;
+
+            case 'PS_DISTANCE_UNIT':
+            case 'PS_DIMENSION_UNIT':
+                $validValue = Validate::isDistanceUnit($value);
+                break;
+
+            case 'PS_LOCALE_LANGUAGE':
+            case 'PS_LOCALE_COUNTRY':
+                $validValue = Validate::isLanguageIsoCode($value);
+                break;
+
+            default:
+                $interface->error("The configuration key '$key' is not handled by this command");
+                break;
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration_value($value)) {
+            $interface->success("Successfully updated configuration key '$key'");
+        }
+        else {
+            $interface->error("Could not update configuration key '$key'");
+        }
+    }
+
+	public function list_languages() {
 		$languages = Language::getLanguages(false, false);
 
 		$defaultLang = Configuration::get('PS_LANG_DEFAULT');

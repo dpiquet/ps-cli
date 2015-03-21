@@ -59,7 +59,66 @@ class PS_CLI_ProductPreferences extends PS_CLI_Plugin {
 		$table->display();
 
 		return;
-	}
+    }
+
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
+
+        $validValue = false;
+
+        switch($key) {
+            case 'PS_CATALOG_MODE':
+            case 'PS_CART_REDIRECT':
+            case 'PS_FORCE_FRIENDLY_PRODUCT':
+            case 'PS_DISPLAY_QTIES':
+            case 'PS_DISPLAY_JQZOOM':
+            case 'PS_DISP_UNAVAILABLE_ATTR':
+            case 'PS_ATTRIBUTE_CATEGORY_DISPLAY':
+            case 'PS_DISPLAY_DISCOUNT_PRICE':
+            case 'PS_ORDER_OUT_OF_STOCK':
+            case 'PS_STOCK_MANAGEMENT':
+            case 'PS_ADVANCED_STOCK_MANAGEMENT':
+            case 'PS_FORCE_ASM_NEW_PRODUCT':
+                $validValue = Validate::isBool($value);
+                break;
+
+            case 'PS_COMPARATOR_MAX_ITEM':
+            case 'PS_NB_DAYS_NEW_PRODUCT':
+            case 'PS_PRODUCT_SHORT_DESC_LIMIT':
+            case 'PS_PRODUCTS_PER_PAGE':
+            case 'PS_LAST_QTIES':
+                $validValue = Validate::isUnsignedInt($value);
+                break;
+
+            case 'PS_PRODUCTS_ORDER_BY':
+                $validValue = (Validate::isUnsignedInt($value) &&
+                    $value <= 7);
+                break;
+
+            case 'PS_ATTRIBUTE_ANCHOR_SEPARATOR':
+                //todo
+                break;
+
+            case 'PS_DEFAULT_WAREHOUSE_NEW_PRODUCT':
+                $validValue = Validate::isUnsignedId($value);
+                break;
+
+            default:
+                $interface->error("The configuration key '$key' is not handled by this command");
+                break;
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration($key, $value)) {
+            $interface->success("Successfully updated configuration key '$key'");
+        }
+        else {
+            $interface->error("Could not update configuration key '$key'");
+        }
+    }
 }
 
 PS_CLI_Configure::register_plugin('PS_CLI_ProductPreferences');

@@ -4,7 +4,10 @@ class PS_CLI_Preferences extends PS_CLI_Plugin {
 
 	protected function __construct() {
 		$command = new PS_CLI_Command('preferences', 'Set up PrestaShop preferences');
-		$command->addOpt('show-status', 'Show preferences configuration');
+        $command->addOpt('show-status', 'Show preferences configuration')
+            ->addOpt('update', 'Update configuration value', false, 'boolean')
+            ->addOpt('key', 'Configuration key to update', false, 'string')
+            ->addOpt('value', 'Value to assign to the configuration key', false, 'string');
 
 		$this->register_command($command);
 	}
@@ -16,17 +19,31 @@ class PS_CLI_Preferences extends PS_CLI_Plugin {
 		if($arguments->getOpt('show-status', false)) {
 			$this->show_preferences_status();
 			$status = true;
-		}
+        }
+        elseif($arguments->getOpt('udpate', false)) {
+            $key = $arguments->getOpt('key', NULL);
+            $value = $arguments->getOpt('value', NULL);
+
+            if(is_null($key)) {
+                $interface->error("You must provide --key with --update");
+            }
+
+            if(is_null($value)) {
+                $interface->error("You must provide --value with --update");
+            }
+
+            $this->_update_configuration($key, $value);
+        }
 		else {
 			$arguments->show_command_usage('preferences');
-			exit(1);
+			$interface->error();
 		}
 
 		if($status) {
-			exit(0);
+			$interface->success();
 		}
 		else {
-			exit(1);
+			$interface->error();
 		}
 	}
 
@@ -55,7 +72,6 @@ class PS_CLI_Preferences extends PS_CLI_Plugin {
                                 19 => 'Sport and Entertainment',
                                 20 => 'Travel'
                         );
-
 
 		$table->setHeaders(Array(
 			'Key',
@@ -104,7 +120,59 @@ class PS_CLI_Preferences extends PS_CLI_Plugin {
 		$table->addRow($line);
 
 		$table->display();
-	}
+    }
+
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
+
+        $validValue = false;
+
+        switch($key) {
+
+            case 'PS_TOKEN_ENABLE':
+            case 'PS_ALLOW_HTML_IFRAME':
+            case 'PS_USE_HTML_PURIFIER':
+            case 'PS_DISPLAY_SUPPLIERS':
+            case 'PS_DISPLAY_BEST_SELLERS':
+            case 'PS_COOKIE_CHECKIP':
+            case 'PS_SSL_ENABLED':
+                $validValue = Validate::isBool($value);
+                break;
+
+            case 'PS_COOKIE_LIFETIME_FO':
+            case 'PS_COOKIE_LIFETIME_FO':
+            case 'PS_LIMIT_UPLOAD_FILE_VALUE':
+            case 'PS_LIMIT_UPLOAD_IMAGE_VALUE':
+            case 'PS_ATTACHMENT_MAXIMUM_SIZE':
+                $validValue = Validate::isUnsignedInt($value);
+                break;
+
+            case 'PS_PRICE_ROUND_MODE':
+                $validValue = (Validate::isUnsignedInt($value) &&
+                    $value <= 2);
+                break;
+
+            case 'PS_SHOP_ACTIVITY':
+                $validValue = (Validate::isUnsignedInt($value) && 
+                    $value <= 20);
+                break;
+
+            default:
+                $interface->error("The configuration key '$key' is not handled by this plugin");
+                break;
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration_value($key, $value)) {
+            $interface->success("Configuration key '$key' successfully updated");
+        }
+        else {
+            $interface->error("Could not update configuration key '$key'");
+        }
+    }
 }
 
 PS_CLI_Configure::register_plugin('PS_CLI_Preferences');

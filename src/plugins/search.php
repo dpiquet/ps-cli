@@ -11,18 +11,36 @@ class PS_CLI_Search extends PS_CLI_Plugin {
 			->addOpt('search', 'Search keyword', false, 'string')
 			->addOpt('delete-alias', 'Delete an alias', false, 'integer')
 			->addOpt('enable-alias', 'Enable an alias', false, 'integer')
-			->addOpt('disable-alias', 'Disable an alias', false, 'integer');
+            ->addOpt('disable-alias', 'Disable an alias', false, 'integer')
+            ->addOpt('update', 'Update a configuration value', false, 'boolean')
+            ->addOpt('key', 'Configuration key to update', false, 'string')
+            ->addOpt('value', 'Value to assign to the configuration key', false, 'string');
 
 		$this->register_command($command);
 	}
 
 	public function run() {
-		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+        $arguments = PS_CLI_Arguments::getArgumentsInstance();
+        $interface = PS_CLI_Interface::getInterface();
 
 		if($arguments->getOpt('show-status', false)) {
 			$this->show_status();
 			$status = true;
-		}
+        }
+        elseif($arguments->getOpt('update', false)) {
+            $key = $arguments->getOpt('key', null);
+            $value = $arguments->getOpt('value', null);
+
+            if(is_null($key)) {
+                $interface->error("You must provide --key with --update");
+            }
+
+            if(is_null($value)) {
+                $interface->error("You must provide --value with --update");
+            }
+
+            $this->_update_configuration($key, $value);
+        }
 		elseif($arguments->getOpt('list-aliases', false)) {
 			$this->list_aliases();
 			$status = true;
@@ -34,13 +52,13 @@ class PS_CLI_Search extends PS_CLI_Plugin {
 			if(is_null($alias)) {
 				echo "Error, you must specify --alias with a value\n";
 				$arguments->show_command_usage('search-preferences');
-				exit(1);
+				$interface->error();
 			}
 
 			if(is_null($search)) {
 				echo "Error, you must specify --search with a value\n";
 				$arguments->show_command_usage('search-preferences');
-				exit(1);
+				$interface->error();
 			}
 
 			$status = $this->add_alias($alias, $search);
@@ -56,7 +74,7 @@ class PS_CLI_Search extends PS_CLI_Plugin {
 		}
 		else {
 			$arguments->show_command_usage('search-preferences');
-			exit(1);
+			$interface->error();
 		}
 
 		if($status) {
@@ -65,7 +83,6 @@ class PS_CLI_Search extends PS_CLI_Plugin {
 		else {
 			return false;
 		}
-
 	}
 
 	public static function show_status() {
@@ -78,23 +95,69 @@ class PS_CLI_Search extends PS_CLI_Plugin {
 			)
 		);
 
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_SEARCH_INDEXIATION', 'Automatic indexing of products');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_SEARCH_AJAX', 'Enable ajax search');
-		PS_CLI_UTILS::add_boolean_configuration_status($table, 'PS_INSTANT_SEARCH', 'Enable instant search');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_MINWORDLEN', 'Minimum word length to index');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_BLACKLIST', 'Blacklisted words (separated by |)');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_PNAME', 'Product name weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_REF', 'Reference weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_SHORTDESC', 'Short description weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_DESC', 'Description weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_CNAME', 'Category weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_MNAME', 'Manufacturer weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_TAG', 'Tags weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_ATTRIBUTE', 'Attribute weight');
-		PS_CLI_UTILS::add_configuration_value($table, 'PS_SEARCH_WEIGHT_FEATURE', 'Features weight');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_SEARCH_INDEXIATION', 'Automatic indexing of products');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_SEARCH_AJAX', 'Enable ajax search');
+		PS_CLI_Utils::add_boolean_configuration_status($table, 'PS_INSTANT_SEARCH', 'Enable instant search');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_MINWORDLEN', 'Minimum word length to index');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_BLACKLIST', 'Blacklisted words (separated by |)');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_PNAME', 'Product name weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_REF', 'Reference weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_SHORTDESC', 'Short description weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_DESC', 'Description weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_CNAME', 'Category weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_MNAME', 'Manufacturer weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_TAG', 'Tags weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_ATTRIBUTE', 'Attribute weight');
+		PS_CLI_Utils::add_configuration_value($table, 'PS_SEARCH_WEIGHT_FEATURE', 'Features weight');
 
 		$table->display();
-	}
+    }
+
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
+
+        $validValue = false;
+
+        switch($key) {
+            case 'PS_SEARCH_INDEXIATION':
+            case 'PS_SEARCH_AJAX':
+            case 'PS_INSTANCE_SEARCH':
+                $validValue = Validate::isBool($value);
+                break;
+
+            case 'PS_SEARCH_WEIGHT_PNAME':
+            case 'PS_SEARCH_WEIGHT_REF':
+            case 'PS_SEARCH_WEIGHT_SHORTDESC':
+            case 'PS_SEARCH_WEIGHT_DESC':
+            case 'PS_SEARCH_WEIGHT_CNAME':
+            case 'PS_SEARCH_WEIGHT_MNAME':
+            case 'PS_SEARCH_WEIGHT_TAG':
+            case 'PS_SEARCH_WEIGHT_ATTRIBUTE':
+            case 'PS_SEARCH_WEIGHT_FEATURE':
+            case 'PS_SEARCH_MINWORDLEN':
+                $validValue = Validate::isUnsignedInt($value);
+                break;
+
+            case 'PS_SEARCH_BLACKLIST':
+                $validValue = Validate::isString($value);
+                break;
+
+            default:
+                $interface->error("Configuration key '$key' is not handled by this command");
+                break;
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration_value($key, $value)) {
+            $interface->success("Successfully updated configuration key '$key'");
+        }
+        else {
+            $interface->error("Could not update configuration key '$key'");
+        }
+    }
 
 	//todo: make use of alias object instead of direct access to DB
 	public static function list_aliases() {

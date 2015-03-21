@@ -127,7 +127,53 @@ class PS_CLI_Seo extends PS_CLI_Plugin {
 		$table->display();
 
 		return;
-	}
+    }
+
+    protected function _update_configuration($key, $value) {
+        $interface = PS_CLI_Interface::getInterface();
+
+        $validValue = false;
+        $updateUri = false;
+
+        switch($key) {
+
+            case 'PS_CANONICAL_REDIRECT':
+                $validValue = (Validate::isUnsignedInt($value) &&
+                    $value <= 2);
+                break;
+
+            case 'PS_SHOP_DOMAIN_SSL':
+            case 'PS_SHOP_DOMAIN':
+                $updateUri = true;
+
+                $validValue = Validate::isCleanHtml($value);
+                break;
+
+			case 'PS_HTACCESS_DISABLE_MODSEC':
+			case 'PS_HTACCESS_DISABLE_MULTIVIEWS':
+			case 'PS_ALLOW_ACCENTED_CHARS_URL':
+            case 'PS_REWRITING_SETTINGS':
+                $validValue = Validate::isBool($value);
+                break;
+
+        }
+
+        if(!$validValue) {
+            $interface->error("'$value' is not a valid value for configuration key '$key'");
+        }
+
+        if(PS_CLI_Utils::update_configuration_value($key, $value)) {
+            if($updateUri) {
+                $this->post_update_uri();
+            }
+
+            $interface->success("Successfully updated configuration key '$key'");
+        }
+        else {
+            $interface->error("Could not update configuration key '$key'");
+        }
+
+    }
 
 	public static function update_base_uri($uri) {
 		$context = Context::getContext();

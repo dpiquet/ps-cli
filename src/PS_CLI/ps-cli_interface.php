@@ -1,6 +1,6 @@
 <?php
 
-class PS_CLI_INTERFACE {
+class PS_CLI_Interface {
 
 	const RET_OK 		= 0;
 	const RET_WARN 		= 0;
@@ -101,6 +101,16 @@ class PS_CLI_INTERFACE {
 
 	public function exit_program() {
 		exit($this->retVal);
+	}
+
+	public function error($msg = '') {
+		echo "$msg\n";
+		exit(self::RET_ERR);
+	}
+
+	public function success($msg = '') {
+		echo "$msg\n";
+		exit(self::RET_OK);
 	}
 }
 

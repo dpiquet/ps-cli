@@ -74,7 +74,7 @@ class PS_CLI_Cms extends PS_CLI_Plugin {
 			$status = $this->delete_category($catId);
 		}
 		else {
-			//$this->_show_command_usage('cms');
+			$arguments->show_command_usage('cms');
 			$interface->exit_program(1);
 		}
 
