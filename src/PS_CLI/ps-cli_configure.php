@@ -1,7 +1,7 @@
 <?php
 
 // ps-cli configuration
-class PS_CLI_CONFIGURE {
+class PS_CLI_Configure {
 
 	private static $_instance = NULL;
 
@@ -55,7 +55,7 @@ class PS_CLI_CONFIGURE {
 
 		$this->pluginDirs[] = PS_CLI_ROOT . '/plugins';
 
-		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
 
 		// preconfiguration done. Load the plugins
 		$this->read_plugin_directories();
@@ -97,9 +97,8 @@ class PS_CLI_CONFIGURE {
 
 	// configuration after PrestaShop core loading
 	public function postload_configure() {
-
 		$context = Context::getContext();
-		$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
+		$arguments = PS_CLI_Arguments::getArgumentsInstance();
 
 		//store PS version for later use
 		$this->psVersion = _PS_VERSION_;
@@ -331,7 +330,6 @@ class PS_CLI_CONFIGURE {
 			return false;
 		}
 	}
-
 }
 
 ?>
