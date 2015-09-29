@@ -54,7 +54,7 @@ A plugin **must** define at least one command. To create a command, create a `PS
 
 `$command = new PS_CLI_Command('command-name', 'command-defition');`
 
-The `PS_CLI_Command' class offers a few methods:
+The `PS_CLI_Command` class offers a few methods:
 * addOpt(name, description, required, type)
 * addArg(name, description, required)
 * setDescription(description)
@@ -66,6 +66,8 @@ Once a command is ready, register it:
 ### Argument parsing ###
 
 The plugin's `run` method must implement the argument parsing. To do so, first get the `PS_CLI_Arguments` singleton instance.
+
+If the plugin depends on a module, check it's main class exists using PHP's `class_exists` function. You can see the autoupgrade plugin as an example.
 
 `$arguments = PS_CLI_Arguments::getArgumentsInstance();`
 
@@ -103,7 +105,7 @@ use the `getArg` method to retrieve arguments.
 
 ## Plugin utils functions ##
 
-The 'PS_CLI_Plugin class defines some final methods you can not override.
+The `PS_CLI_Plugin` class defines some final methods you can not override.
 
 * public GetInstance()
 * protected register_command()

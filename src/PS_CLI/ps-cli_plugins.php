@@ -73,10 +73,18 @@ abstract class PS_CLI_Plugin {
 		return $this->_commands;
 	}
 
+	/*
+	 * Helper function to register a plugin hook
+	 *
+	 */
+	final protected function registerHook($event, $callback, $args = Array()) {
+		PS_CLI_Hooks::registerHook($this, $event, $callback, $args);
+	}
+
 	/**
 	 *
 	 * this is the plugin's user code
-	 * must include logic and argument parsing (using arguments class)
+	 * must include logic and argument parsing (using PS_CLI_Arguments class)
 	 *
 	 */
 	abstract public function run();

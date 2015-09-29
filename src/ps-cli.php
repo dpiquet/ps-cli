@@ -44,6 +44,7 @@ require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_configure.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_interface.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_plugins.php');
 require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_command.php');
+require_once(PS_CLI_ROOT . '/PS_CLI/ps-cli_hooks.php');
 
 /*
  * Load 3d party librairies
@@ -56,15 +57,23 @@ require_once(PS_CLI_ROOT . '/lib/garden-cli/Args.php');
 require_once(PS_CLI_ROOT . '/lib/garden-cli/Cli.php');
 require_once(PS_CLI_ROOT . '/lib/garden-cli/Table.php');
 
-$conf = PS_CLI_CONFIGURE::getConfigurationInstance();
+$conf = PS_CLI_Configure::getConfigurationInstance();
 $conf->preload_configure();
 
-$arguments = PS_CLI_ARGUMENTS::getArgumentsInstance();
-
+$arguments = PS_CLI_Arguments::getArgumentsInstance();
 $arguments->parse_arguments();
 
+
+// run before_load_ps_core hooks
+PS_CLI_Hooks::callHooks('before_load_ps_core');
+
 //load ps core
-PS_CLI_UTILS::ps_cli_load_ps_core();
+if($conf->loadPsCore) {
+	PS_CLI_UTILS::ps_cli_load_ps_core();
+}
+else {
+	echo "[DEBUG]: PS core not loaded\n";
+}
 
 $conf->postload_configure();
 

@@ -453,7 +453,9 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 	}
 
 	// Todo: support for bought modules (prestashop login, etc...)
-	public static function upgrade_all_modules() {	
+    public static function upgrade_all_modules() {
+        $configuration = PS_CLI_Configure::getConfigurationInstance();
+        $interface = PS_CLI_Interface::getInterface();
 
 		//types:
 		// addonsMustHave
@@ -509,23 +511,25 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 				continue;
 			}
 
-			if (version_compare($module->version, $km->version, '<') == 0) {
-				echo "$module->name: $module->version is equal to $km->version\n";
+            if (version_compare($module->version, $km->version, '<') == 0) {
+                if($configuration->debug) {
+                    $interface->display_line("$module->name: $module->version is equal to $km->version\n");
+                }
 				continue;
 			}
 
-			echo "Downloading $module->name archive\n";
+			$interface->display_line("Downloading $module->name archive\n");
 			$moduleArchive = self::_download_module_archive($km);
 			if (! $moduleArchive ) {
-				echo "Could not download $module->name update\n";
+				$interface->display_line("Could not download $module->name update\n");
 				$upgradeErrors[] = "$module->name could not be downloaded\n";
 				continue;
 			}
 
-			echo "Extracting $module->name archive\n";
+			$interface->display_line("Extracting $module->name archive\n");
 
 			if (! Tools::ZipExtract($moduleArchive, _PS_MODULE_DIR_)) {
-				echo "Could not extract $module->name archive\n";	
+				$interface->display_line("Could not extract $module->name archive\n");
 				$upgradeErrors[] = "$module->name could not be extracted\n";
 				continue;
 			}
@@ -535,9 +539,14 @@ class PS_CLI_Modules extends PS_CLI_Plugin {
 		    }
 		}
 
-		self::upgrade_all_modules_database();
+        $interface->display_line("Upgrading database");
+        self::upgrade_all_modules_database();
 
-		return true;
+        if(!empty($upgradeErrors)) {
+            $interface->error('Some modules could not be upgraded');
+        }
+
+		$interface->success('Done');
 	}
 
 	//todo manage loggedOnAddons

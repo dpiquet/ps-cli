@@ -175,7 +175,6 @@ class PS_CLI_Themes extends PS_CLI_Plugin {
 			return false;
 		}
 
-
 		//from Prestashop's AdminThemeController.php
 		$theme = new Theme($themeId);
 

@@ -32,6 +32,10 @@ class PS_CLI_Configure {
 
 	public $allowRoot = false;
 
+	public $loadPsCore = true;
+	
+	public $psCoreLoaded = false;
+
 	public $psPath = NULL;
 
 	public $boPath = '.';
@@ -63,8 +67,18 @@ class PS_CLI_Configure {
 	}
 
 	public static function getConfigurationInstance() {
+		echo("[DEPRECATED] calling getConfigurationInstance is deprecated\n");
+
 		if(is_null(self::$_instance)) {
-			self::$_instance = new PS_CLI_CONFIGURE();
+			self::$_instance = new PS_CLI_Configure();
+		}
+
+		return self::$_instance;
+	}
+
+	public static function getInstance() {
+		if(is_null(self::$_instance)) {
+			self::$_instance = new PS_CLI_Configure();
 		}
 
 		return self::$_instance;
@@ -80,7 +94,7 @@ class PS_CLI_Configure {
 
 		$this->pluginDirs[] = PS_CLI_ROOT . '/plugins';
 
-		$arguments = PS_CLI_Arguments::getArgumentsInstance();
+		$arguments = PS_CLI_Arguments::getInstance();
 
 		// preconfiguration done. Load the plugins
 		$this->read_plugin_directories();
@@ -117,11 +131,16 @@ class PS_CLI_Configure {
 		}
 
 		$this->pluginDirs[] = PS_CLI_ROOT . '/plugins';
-
 	}
 
 	// configuration after PrestaShop core loading
 	public function postload_configure() {
+
+		// Do not try to configure PrestaShop if it's not loaded
+		if(!$this->psCoreLoaded) {
+			return;
+		}
+
 		$context = Context::getContext();
 		$arguments = PS_CLI_Arguments::getArgumentsInstance();
 
@@ -203,6 +222,9 @@ class PS_CLI_Configure {
 
 			self::set_current_shop_context($opt);
 		}
+
+		// activate classes autoload 
+		#require_once( PS_ADMIN_DIR . '/../config/autoload.php' );
 	}
 
 	public static function find_ps_root($current = NULL) {
@@ -235,7 +257,6 @@ class PS_CLI_Configure {
 	}
 
 	public function find_backoffice_dir() {
-
 		if(is_null($this->psPath)) {
 			echo "Fatal error, could not find PrestaShop installation dir !\n";
 			exit(1);
@@ -251,6 +272,9 @@ class PS_CLI_Configure {
 		while($cur = readdir($dir)) {
 			if(is_dir($this->psPath.'/'.$cur)) {
 				if(file_exists($this->psPath.'/'.$cur.'/get-file-admin.php')) {
+					if($this->debug) {
+						PS_CLI_Interface::display_line("Found backoffice in $this->psPath/$cur");
+					}
 					return $this->psPath.'/'.$cur;
 				}
 			}

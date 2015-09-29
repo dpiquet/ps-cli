@@ -47,13 +47,28 @@ class PS_CLI_Arguments {
 		$this->create_schema();
 	}
 
-	/* get the singleton arguments object */
+	/* get the singleton arguments object (deprecated for */
 	public static function getArgumentsInstance() {
+
+		echo("[DEPRECATED] avoid calling getArgumentsInstance\n");
+
 		if(!isset(self::$instance))
 			self::$instance = new PS_CLI_ARGUMENTS();
 
 		return self::$instance;
 	}
+
+	/*
+	 * Get singleton instance
+	 *
+	 */
+	public static function getInstance() {
+		if(!isset(self::$instance))
+			self::$instance = new PS_CLI_ARGUMENTS();
+
+		return self::$instance;
+	}
+
 
 	//declare all available commands and options
 	public function create_schema() {
@@ -149,6 +164,10 @@ class PS_CLI_Arguments {
 		$this->_cli->writeHelp($command);
 	}
 
+	/*
+	 * Add a user command
+	 *
+	 */
 	public function add_command(PS_CLI_Command $command, $handler) {
 		$interface =  PS_CLI_INTERFACE::getInterface();
 
@@ -174,6 +193,18 @@ class PS_CLI_Arguments {
 			$interface->add_warning("Could not add command $command\n");
 			return false;
 		}
+	}
+
+	/*
+	 * Get a command's handler class
+	 *
+	 */
+	public function get_command_handler_class($commandName = NULL) {
+		if(is_null($commandName)) {
+			$commandName = $this->getCommand();
+		}
+
+		return get_class($this->_commands[$commandName]);
 	}
 }
 

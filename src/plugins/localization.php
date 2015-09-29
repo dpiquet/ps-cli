@@ -151,7 +151,12 @@ class PS_CLI_Localization extends PS_CLI_Plugin {
                 break;
 
             case 'PS_TIMEZONE':
-                $validValue = Validate::isAnything($value);
+				// check if given value is a valid date time zone
+				$timeZones = DateTimeZone::listIdentifiers();
+				foreach($timeZones as $code => $tzString) {
+					if ($value == $tzString) { $validValue = true; }
+				}
+
                 break;
 
             case 'PS_CURRENCY_DEFAULT':
@@ -191,7 +196,7 @@ class PS_CLI_Localization extends PS_CLI_Plugin {
             $interface->error("'$value' is not a valid value for configuration key '$key'");
         }
 
-        if(PS_CLI_Utils::update_configuration_value($value)) {
+        if(PS_CLI_Utils::update_configuration_value($key, $value)) {
             $interface->success("Successfully updated configuration key '$key'");
         }
         else {

@@ -30,7 +30,7 @@ class PS_CLI_Interface {
 	const RET_OK 		= 0;
 	const RET_WARN 		= 0;
 	const RET_ERR 		= 1;
-	const RET_EXCEPTION 	= 1;
+	const RET_EXCEPTION = 1;
 	const RET_ARGERR 	= 1;
 
 	// warnings Array
@@ -97,11 +97,15 @@ class PS_CLI_Interface {
 		$this->buffer .= $content;
 	}
 
-	public function display_line($line) {
+	public static function display_line($line) {
 		echo "$line\n";
 	}
 
-	public function set_ret_val($val, $force = false) {
+	public static function display_debug_line($line) {
+		echo "[DEBUG] $line\n";
+	}
+
+	public static function set_ret_val($val, $force = false) {
 		if($force) { $this->retVal = $val; }
 		else { $this->retVal |= $val; }
 	}
@@ -110,7 +114,7 @@ class PS_CLI_Interface {
 		$table->display();
 	}
 
-	public function display_table(Cli\Table $table) {
+	public static function display_table(Cli\Table $table) {
 		$table->display();
 	}
 
@@ -128,12 +132,12 @@ class PS_CLI_Interface {
 		exit($this->retVal);
 	}
 
-	public function error($msg = '') {
+	public static function error($msg = '') {
 		echo "$msg\n";
 		exit(self::RET_ERR);
 	}
 
-	public function success($msg = '') {
+	public static function success($msg = '') {
 		echo "$msg\n";
 		exit(self::RET_OK);
 	}

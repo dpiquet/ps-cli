@@ -67,7 +67,7 @@ class PS_CLI_Utils {
 	public static function ps_cli_load_ps_core() {
 
 		//todo: load path
-		$configuration = PS_CLI_Configure::getConfigurationInstance();
+		$configuration = PS_CLI_Configure::getInstance();
 		
 		if (!defined('_PS_ADMIN_DIR_')) {
 		//	define('_PS_ADMIN_DIR_', getcwd());
@@ -90,7 +90,18 @@ class PS_CLI_Utils {
 		}
 
 		require_once(_PS_ADMIN_DIR_.'/../config/config.inc.php');
+
+		require_once(_PS_ADMIN_DIR_.'/../config/autoload.php');
+
 		require_once(_PS_ADMIN_DIR_.'/functions.php');
+
+		// Load modules
+		$modules = Module::getModulesOnDisk(true);
+		foreach($modules as $mod) {
+			Module::getInstanceByName($mod);
+		}
+
+		$configuration->psCoreLoaded = true;
 
 	}
 

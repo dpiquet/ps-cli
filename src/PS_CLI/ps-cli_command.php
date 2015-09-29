@@ -84,7 +84,7 @@ class PS_CLI_Command {
 		$arguments->add_command($this, $handler);
 	}
 
-	public function set_description($description) {
+	public function setDescription($description) {
 		$this->description = $description;
 	}
 }
